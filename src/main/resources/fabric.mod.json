@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "schat",
+  "version": "${version}",
+  "name": "SChat",
+  "description": "Configurable chat: resize it from the chat itself, split it into filtered tabs and pull those tabs out into separate chat windows.",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/schat/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "hw.smoup.schat.client.SchatClient"
+    ],
+    "main": [
+      "hw.smoup.schat.Schat"
+    ]
+  },
+  "mixins": [
+    "schat.mixins.json",
+    {
+      "config": "schat.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "${minecraft_version}"
+  }
+}

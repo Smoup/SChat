@@ -1,0 +1,80 @@
+# Централизованные свойства Stonecutter.
+# Общие ключи — сверху, версионно-специфичные — в секциях [<версия>].
+# Док: https://stonecutter.kikugie.dev/wiki/config/properties
+
+mod.id = "schat"
+mod.name = "SChat"
+mod.version = "1.0.0"
+
+loomx.loom_version = "1.17-SNAPSHOT"
+
+# Публикация на Modrinth (см. publishMods в build.gradle.kts).
+# Неизменяемый project ID со страницы мода (Settings -> General -> Project ID).
+# Токен берётся из gradle-свойства или env MODRINTH_TOKEN.
+publish.modrinth_id = "Cao6yuft"
+
+# deps.fabric_loader — минимальная версия, проверенная запуском dev-клиента.
+# Планка низкая намеренно: чем ниже, тем на большем числе сборок мод запустится.
+# fabric-api в зависимостях нет — мод обходится loader'ом и миксинами.
+
+["1.20.1"]
+mod.mc_compat = "1.20.1"
+deps.fabric_loader = "0.16.10"
+publish.game_versions = "1.20.1"
+
+["1.20.2"]
+mod.mc_compat = "1.20.2"
+deps.fabric_loader = "0.16.10"
+publish.game_versions = "1.20.2"
+
+["1.20.4"]
+mod.mc_compat = ">=1.20.3 <=1.20.4"
+deps.fabric_loader = "0.16.10"
+publish.game_versions = "1.20.3 1.20.4"
+
+["1.20.6"]
+mod.mc_compat = ">=1.20.5 <=1.20.6"
+# 0.15.6-0.15.9 несут mixin 0.12.5 с потолком JAVA_18 и отвергают наш
+# compatibilityLevel=JAVA_21; JAVA_21 понимает начиная с 0.15.10.
+deps.fabric_loader = "0.15.10"
+publish.game_versions = "1.20.5 1.20.6"
+
+["1.21.1"]
+mod.mc_compat = ">=1.21 <=1.21.1"
+deps.fabric_loader = "0.15.11"
+publish.game_versions = "1.21 1.21.1"
+
+["1.21.3"]
+mod.mc_compat = ">=1.21.2 <=1.21.3"
+deps.fabric_loader = "0.16.9"
+publish.game_versions = "1.21.2 1.21.3"
+
+["1.21.4"]
+mod.mc_compat = "1.21.4"
+deps.fabric_loader = "0.16.9"
+publish.game_versions = "1.21.4"
+
+["1.21.5"]
+mod.mc_compat = "1.21.5"
+deps.fabric_loader = "0.16.13"
+publish.game_versions = "1.21.5"
+
+["1.21.8"]
+mod.mc_compat = ">=1.21.6 <=1.21.8"
+deps.fabric_loader = "0.16.13"
+publish.game_versions = "1.21.6 1.21.7 1.21.8"
+
+["1.21.10"]
+mod.mc_compat = ">=1.21.9 <=1.21.10"
+deps.fabric_loader = "0.17.3"
+publish.game_versions = "1.21.9 1.21.10"
+
+["1.21.11"]
+mod.mc_compat = "1.21.11"
+deps.fabric_loader = "0.17.3"
+publish.game_versions = "1.21.11"
+
+["26.1"]
+mod.mc_compat = "~26.1"
+deps.fabric_loader = "0.18.4"
+publish.game_versions = "26.1.2"
