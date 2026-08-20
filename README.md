@@ -95,6 +95,13 @@ English and Russian, picked up from the game language setting.
 ./gradlew :1.21.11:runClient # dev client
 ```
 
+## License
+
+MIT — fork it, change it, ship it in a modpack, no permission needed.
+
+Selling the mod is a separate matter: the Minecraft EULA forbids selling mods or making
+money from them, so it stays free regardless of this license.
+
 ---
 
 # SChat (русский)
@@ -193,3 +200,10 @@ English and Russian, picked up from the game language setting.
 ./gradlew :1.21.11:build     # одна версия
 ./gradlew :1.21.11:runClient # dev-клиент
 ```
+
+## Лицензия
+
+MIT — форкай, меняй, клади в сборки, разрешение не нужно.
+
+Продажа — отдельная история: EULA Minecraft запрещает продавать моды и зарабатывать на
+них, так что мод остаётся бесплатным независимо от лицензии.

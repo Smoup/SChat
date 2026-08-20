@@ -86,6 +86,12 @@ The button in the top-right corner of every chat opens the active tab's settings
 
 🇬🇧 English · 🇷🇺 Russian — picked up from your game language.
 
+## 📄 License
+
+📦 **MIT** — free to use, fork and put in modpacks, no permission needed.
+💸 Selling it is off the table anyway: the Minecraft EULA forbids selling mods or making
+money from them.
+
 ---
 
 # 💬 SChat (русский)
@@ -175,3 +181,9 @@ The button in the top-right corner of every chat opens the active tab's settings
 ## 🌍 Языки
 
 🇬🇧 Английский · 🇷🇺 Русский — по языку игры.
+
+## 📄 Лицензия
+
+📦 **MIT** — используй, форкай и клади в сборки, разрешение не нужно.
+💸 Продать всё равно не выйдет: EULA Minecraft запрещает продавать моды и зарабатывать
+на них.
