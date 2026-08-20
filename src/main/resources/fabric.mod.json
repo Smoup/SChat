@@ -6,7 +6,7 @@
   "description": "Configurable chat: resize it from the chat itself, split it into filtered tabs and pull those tabs out into separate chat windows.",
   "authors": [],
   "contact": {},
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "icon": "assets/schat/icon.png",
   "environment": "client",
   "entrypoints": {
