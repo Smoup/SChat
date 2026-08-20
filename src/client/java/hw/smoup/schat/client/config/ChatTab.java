@@ -22,6 +22,7 @@ public final class ChatTab {
     private int historyLimit = DEFAULT_HISTORY;
     private Double backgroundOpacity;
     private boolean exclusive;
+    private boolean matchAllFilters;
     private boolean nickButton;
     private String nickFormat = DEFAULT_NICK_FORMAT;
     private String nickColor = DEFAULT_NICK_COLOR.name();
@@ -88,6 +89,14 @@ public final class ChatTab {
 
     public void setExclusive(boolean exclusive) {
         this.exclusive = exclusive;
+    }
+
+    public boolean matchAllFilters() {
+        return matchAllFilters;
+    }
+
+    public void setMatchAllFilters(boolean matchAllFilters) {
+        this.matchAllFilters = matchAllFilters;
     }
 
     public boolean nickButton() {
@@ -194,7 +203,7 @@ public final class ChatTab {
     }
 
     public boolean accepts(String plainLowerCase) {
-        return breaksNoBan(plainLowerCase) && matchesSomeCondition(plainLowerCase);
+        return breaksNoBan(plainLowerCase) && matchesConditions(plainLowerCase);
     }
 
     private boolean breaksNoBan(String text) {
@@ -206,18 +215,22 @@ public final class ChatTab {
         return true;
     }
 
-    private boolean matchesSomeCondition(String text) {
+    private boolean matchesConditions(String text) {
         boolean hasCondition = false;
         for (MessageFilter filter : filters) {
             if (filter.blank() || filter.negate()) {
                 continue;
             }
             hasCondition = true;
-            if (filter.matches(text)) {
+            boolean hit = filter.matches(text);
+            if (matchAllFilters && !hit) {
+                return false;
+            }
+            if (!matchAllFilters && hit) {
                 return true;
             }
         }
-        return !hasCondition;
+        return !hasCondition || matchAllFilters;
     }
 
     private static boolean hasSingleNumberPlaceholder(String format) {

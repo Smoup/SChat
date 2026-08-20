@@ -16,6 +16,7 @@ public final class MessageFilter {
     private Mode mode = Mode.CONTAINS;
     private String text = "";
     private boolean negate;
+    private boolean strip;
 
     private transient String lowered = "";
 
@@ -29,8 +30,9 @@ public final class MessageFilter {
     public MessageFilter copy() {
         MessageFilter copy = new MessageFilter();
         copy.mode = mode;
-        copy.text = text;
         copy.negate = negate;
+        copy.strip = strip;
+        copy.setText(text);
         return copy;
     }
 
@@ -63,6 +65,18 @@ public final class MessageFilter {
 
     public boolean negate() {
         return negate;
+    }
+
+    public boolean strip() {
+        return strip;
+    }
+
+    public void toggleStrip() {
+        strip = !strip;
+    }
+
+    public String lowered() {
+        return lowered;
     }
 
     public boolean blank() {

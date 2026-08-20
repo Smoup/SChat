@@ -39,6 +39,7 @@ public final class ChatPanel {
 
     private List<ChatTab> tabs = new ArrayList<>();
     private int activeTab;
+    private boolean tabsBelow;
 
     private final transient ScreenFit fit = new ScreenFit();
     private final transient RepeatState repeat = new RepeatState();
@@ -211,6 +212,14 @@ public final class ChatPanel {
         return copy;
     }
 
+    public boolean tabsBelow() {
+        return tabsBelow;
+    }
+
+    public void setTabsBelow(boolean tabsBelow) {
+        this.tabsBelow = tabsBelow;
+    }
+
     public List<ChatTab> tabs() {
         return tabs;
     }
@@ -302,6 +311,7 @@ public final class ChatPanel {
         private int sourceOffsetX;
         private int sourceOffsetY;
         private double sourceScale;
+        private boolean sourceTabsBelow;
 
         private int width;
         private int heightFocused;
@@ -326,7 +336,8 @@ public final class ChatPanel {
                     && sourceHeightUnfocused == ChatPanel.this.heightUnfocused
                     && sourceOffsetX == ChatPanel.this.offsetX
                     && sourceOffsetY == ChatPanel.this.offsetY
-                    && sourceScale == ChatPanel.this.scale;
+                    && sourceScale == ChatPanel.this.scale
+                    && sourceTabsBelow == ChatPanel.this.tabsBelow;
         }
 
         private void remember() {
@@ -338,13 +349,14 @@ public final class ChatPanel {
             sourceOffsetX = ChatPanel.this.offsetX;
             sourceOffsetY = ChatPanel.this.offsetY;
             sourceScale = ChatPanel.this.scale;
+            sourceTabsBelow = ChatPanel.this.tabsBelow;
         }
 
         private void fitSize() {
             double scale = sourceScale;
             width = clamp(sourceWidth, MIN_WIDTH, Math.max(MIN_WIDTH, ChatFrame.maxWidth(scale)));
-            int tabStripInChatUnits = (int) Math.ceil(TabStrip.RESERVED / scale);
-            int maxHeight = Math.max(MIN_HEIGHT, ChatFrame.maxHeight(scale) - tabStripInChatUnits);
+            int reserve = tabsBelow ? 0 : (int) Math.ceil(TabStrip.RESERVED / scale);
+            int maxHeight = Math.max(MIN_HEIGHT, ChatFrame.maxHeight(scale) - reserve);
             heightFocused = clamp(sourceHeightFocused, MIN_HEIGHT, maxHeight);
             heightUnfocused = clamp(sourceHeightUnfocused, MIN_HEIGHT, maxHeight);
         }
@@ -356,9 +368,10 @@ public final class ChatPanel {
                 return;
             }
             double scale = sourceScale;
-            int bottom = ChatFrame.baseBottom(scale);
+            int bottom = ChatFrame.baseBottom(scale) + (tabsBelow ? TabStrip.RESERVED : 0);
             int highestTop = Math.min(ChatFrame.baseTop(scale, heightFocused),
-                    ChatFrame.baseTop(scale, heightUnfocused)) - TabStrip.RESERVED;
+                    ChatFrame.baseTop(scale, heightUnfocused))
+                    - (tabsBelow ? 0 : TabStrip.RESERVED);
             offsetX = withinScreen(sourceOffsetX, 0, guiWidth - ChatFrame.baseRight(scale, width));
             offsetY = withinScreen(sourceOffsetY, -highestTop,
                     guiHeight - bottom - CHAT_INPUT_HEIGHT);

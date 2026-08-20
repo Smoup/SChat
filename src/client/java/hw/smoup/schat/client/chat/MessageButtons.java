@@ -3,6 +3,7 @@ package hw.smoup.schat.client.chat;
 import hw.smoup.schat.client.Compat;
 import hw.smoup.schat.client.Translations;
 import hw.smoup.schat.client.config.ChatTab;
+import hw.smoup.schat.client.config.MessageFilter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -29,10 +30,11 @@ public final class MessageButtons {
     }
 
     public static Component decorate(Component message, String normalized, ChatTab tab) {
+        Component result = stripFilterParts(message, tab);
         if (!tab.nickButton() && !tab.copyButton()) {
-            return message;
+            return result;
         }
-        Component result = message;
+        message = result;
 
         if (tab.nickButton() && !normalized.contains(ADMINTOOL_MARK)) {
             String nick = findNick(normalized);
@@ -55,6 +57,65 @@ public final class MessageButtons {
         }
 
         return result;
+    }
+
+    // Фильтр с пометкой «вырезать» убирает из показанного текста ту часть, по которой
+    // сообщение сюда и попало: раз вкладка про неё, повторять её в каждой строке незачем.
+    private static Component stripFilterParts(Component message, ChatTab tab) {
+        List<String> parts = new ArrayList<>();
+        for (MessageFilter filter : tab.filters()) {
+            if (filter.strip() && !filter.blank() && !filter.negate()) {
+                parts.add(filter.lowered());
+            }
+        }
+        if (parts.isEmpty()) {
+            return message;
+        }
+        boolean[] cut = markCutPositions(message.getString(), parts);
+        if (cut == null) {
+            return message;
+        }
+        MutableComponent result = Component.empty();
+        int[] offset = {0};
+        message.visit((style, part) -> {
+            String kept = keepUncut(part, cut, offset[0]);
+            offset[0] += part.length();
+            if (!kept.isEmpty()) {
+                result.append(Component.literal(kept).withStyle(style));
+            }
+            return Optional.empty();
+        }, Style.EMPTY);
+        return result;
+    }
+
+    // Искать надо по всему сообщению: сервер часто разрывает строку на куски со своими
+    // стилями, и подстрока фильтра может лежать сразу в двух из них.
+    private static boolean[] markCutPositions(String text, List<String> parts) {
+        boolean[] cut = new boolean[text.length()];
+        String haystack = text.toLowerCase(Locale.ROOT);
+        boolean found = false;
+        for (String part : parts) {
+            int index = haystack.indexOf(part);
+            while (index >= 0) {
+                for (int position = index; position < index + part.length(); position++) {
+                    cut[position] = true;
+                }
+                found = true;
+                index = haystack.indexOf(part, index + part.length());
+            }
+        }
+        return found ? cut : null;
+    }
+
+    private static String keepUncut(String part, boolean[] cut, int offset) {
+        StringBuilder kept = new StringBuilder(part.length());
+        for (int index = 0; index < part.length(); index++) {
+            int position = offset + index;
+            if (position >= cut.length || !cut[position]) {
+                kept.append(part.charAt(index));
+            }
+        }
+        return kept.toString();
     }
 
     private static Component insertAfterNick(Component message, String nick, Component button) {

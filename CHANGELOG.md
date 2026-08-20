@@ -1,3 +1,16 @@
+## 1.0.1
+
+- Filter mode switch: **Any** (one match is enough) or **All** (the message must satisfy
+  every condition at once, e.g. start with one word and end with another)
+- **Cut** toggle on every filter: removes the matched part from the displayed text, so a
+  prefix the whole tab is about no longer repeats on every line
+- Tab strip can be placed **above or below** the chat
+- Right click a tab to open its settings without switching to it
+- Scrollbar next to the filter list
+- Fixed: "Only here" now hides messages from tabs in **all** chats, not just its own
+- Fixed: cutting works even when the server splits the message into differently styled
+  pieces
+
 ## 1.0.0
 
 First release.
@@ -18,6 +31,21 @@ First release.
 - English and Russian, no Fabric API required
 
 ---
+
+## 1.0.1 (русский)
+
+- Переключатель режима фильтров: **Любое** (хватит одного совпадения) или **Все**
+  (сообщение должно подойти сразу всем условиям, например начинаться с одного слова и
+  заканчиваться другим)
+- Кнопка **Вырезать** у каждого фильтра: убирает совпавшую часть из показанного текста,
+  чтобы префикс, ради которого и заведена вкладка, не повторялся в каждой строке
+- Полосу вкладок можно поставить **над чатом или под ним**
+- ПКМ по вкладке открывает её настройки, не переключая на неё чат
+- Полоса прокрутки рядом со списком фильтров
+- Исправлено: «Только здесь» убирает сообщения из вкладок **во всех чатах**, а не только
+  в своём
+- Исправлено: вырезание работает и когда сервер разбивает сообщение на куски с разными
+  стилями
 
 ## 1.0.0 (русский)
 

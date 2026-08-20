@@ -28,6 +28,8 @@ public final class TabSettingsScreen extends Screen {
     private static final int ROW_HEIGHT = 22;
     private static final int FILTER_ROWS = 4;
     private static final int LABEL_COLOR = 0xFFFFFFFF;
+    private static final int SCROLL_TRACK = 0x55FFFFFF;
+    private static final int SCROLL_THUMB = 0xFFFFFFFF;
     private static final List<ChatFormatting> COLORS = Arrays.stream(ChatFormatting.values())
             .filter(ChatFormatting::isColor)
             .toList();
@@ -40,18 +42,22 @@ public final class TabSettingsScreen extends Screen {
     /*Screen previous;
     *///?}
 
-    private TabSettingsScreen(ChatPanel panel) {
+    private TabSettingsScreen(ChatPanel panel, ChatTab tab) {
         super(Component.literal(Translations.get("schat.settings.title")));
         this.panel = panel;
-        this.tab = panel.activeTab();
+        this.tab = tab;
     }
 
     public static void open(ChatPanel panel) {
+        open(panel, panel.activeTab());
+    }
+
+    public static void open(ChatPanel panel, ChatTab tab) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null || minecraft.gui == null) {
             return;
         }
-        TabSettingsScreen screen = new TabSettingsScreen(panel);
+        TabSettingsScreen screen = new TabSettingsScreen(panel, tab);
         //? if >=1.21.9 {
         minecraft.gui.getChat().preserveCurrentChatScreen();
         //?} else {
@@ -79,6 +85,19 @@ public final class TabSettingsScreen extends Screen {
         nameBox.setResponder(tab::setName);
         nameBox.setTooltip(tip("schat.settings.name.tip"));
         addRenderableWidget(nameBox);
+
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get(panel.tabsBelow()
+                                ? "schat.settings.tabs.below"
+                                : "schat.settings.tabs.above")),
+                        press -> {
+                            panel.setTabsBelow(!panel.tabsBelow());
+                            SchatConfig.get().save();
+                            rebuildWidgets();
+                        })
+                .bounds(left + 236, y, 48, 18)
+                .tooltip(tip("schat.settings.tabs.tip"))
+                .build());
     }
 
     private void addOpacityRow(int left, int y) {
@@ -146,15 +165,27 @@ public final class TabSettingsScreen extends Screen {
                 .tooltip(tip("schat.settings.exclusive.tip"))
                 .build());
 
-        Button addButton = Button.builder(
-                        Component.literal(Translations.get("schat.settings.filter.add")),
-                        press -> addFilter())
-                .bounds(left + 160, filtersRow, 70, 18)
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get(tab.matchAllFilters()
+                                ? "schat.settings.filters.all"
+                                : "schat.settings.filters.any")),
+                        press -> {
+                            tab.setMatchAllFilters(!tab.matchAllFilters());
+                            rebuildWidgets();
+                        })
+                .bounds(left + 160, filtersRow, 40, 18)
+                .tooltip(tip("schat.settings.filters.mode.tip"))
+                .build());
+
+        addRenderableWidget(Button.builder(Component.literal("+"), press -> addFilter())
+                .bounds(left + 204, filtersRow, 26, 18)
                 .tooltip(tip("schat.settings.filter.add.tip"))
-                .build();
-        addRenderableWidget(addButton);
+                .build());
         addRenderableWidget(applyAllButton(left + 236, filtersRow, "schat.settings.all.filters.tip",
-                this::copyFiltersTo));
+                target -> {
+                    target.setMatchAllFilters(tab.matchAllFilters());
+                    copyFiltersTo(target);
+                }));
 
         int firstFilter = filtersRow + ROW_HEIGHT;
         List<MessageFilter> filters = tab.filters();
@@ -218,17 +249,30 @@ public final class TabSettingsScreen extends Screen {
                             filter.cycle();
                             rebuildWidgets();
                         })
-                .bounds(left, y, 120, 18)
+                .bounds(left, y, 110, 18)
                 .tooltip(tip("schat.settings.filter.mode.tip"))
                 .build());
 
-        EditBox box = new EditBox(font, left + 124, y, 158, 18,
+        EditBox box = new EditBox(font, left + 114, y, 104, 18,
                 Component.literal(Translations.get("schat.settings.filter.text")));
         box.setMaxLength(64);
         box.setValue(filter.text());
         box.setResponder(filter::setText);
         box.setTooltip(tip("schat.settings.filter.text.tip"));
         addRenderableWidget(box);
+
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get("schat.settings.filter.strip"))
+                                .withStyle(filter.strip()
+                                        ? ChatFormatting.GREEN
+                                        : ChatFormatting.DARK_GRAY),
+                        press -> {
+                            filter.toggleStrip();
+                            rebuildWidgets();
+                        })
+                .bounds(left + 222, y, 60, 18)
+                .tooltip(tip("schat.settings.filter.strip.tip"))
+                .build());
 
         addRenderableWidget(Button.builder(Component.literal("x"), press -> {
                     tab.filters().remove(index);
@@ -303,14 +347,32 @@ public final class TabSettingsScreen extends Screen {
                                    int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         drawLabels(graphics::text);
+        drawFilterScrollbar(graphics::fill);
     }
     *///?} else {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
         drawLabels(graphics::drawString);
+        drawFilterScrollbar(graphics::fill);
     }
     //?}
+
+    private void drawFilterScrollbar(ChatOverlay.RectSink sink) {
+        int total = tab.filters().size();
+        if (total <= FILTER_ROWS) {
+            return;
+        }
+        int left = (width - PANEL_WIDTH) / 2 + PANEL_WIDTH - 10;
+        int top = Math.max(10, height / 2 - 150) + ROW_HEIGHT * 7 + 8;
+        int trackHeight = FILTER_ROWS * ROW_HEIGHT - 4;
+        int thumbHeight = Math.max(12, trackHeight * FILTER_ROWS / total);
+        int maxScroll = total - FILTER_ROWS;
+        int thumbTop = top + (trackHeight - thumbHeight) * scroll / maxScroll;
+
+        sink.fill(left, top, left + 4, top + trackHeight, SCROLL_TRACK);
+        sink.fill(left, thumbTop, left + 4, thumbTop + thumbHeight, SCROLL_THUMB);
+    }
 
     private void drawLabels(ChatOverlay.TextSink sink) {
         int left = (width - PANEL_WIDTH) / 2;

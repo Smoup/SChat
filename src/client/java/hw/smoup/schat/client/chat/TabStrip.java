@@ -84,8 +84,10 @@ public final class TabStrip {
                 continue;
             }
             ChatFrame frame = ChatFrame.of(panel, true);
+            int top = Math.min(frame.top(), stripTop(panel, frame));
+            int bottom = Math.max(frame.bottom(), stripTop(panel, frame) + HEIGHT);
             if (mouseX >= frame.left() && mouseX <= frame.right()
-                    && mouseY >= stripTop(panel, true) && mouseY <= frame.bottom()) {
+                    && mouseY >= top && mouseY <= bottom) {
                 return panel;
             }
         }
@@ -138,7 +140,7 @@ public final class TabStrip {
             return null;
         }
         ChatFrame frame = ChatFrame.of(panel, chatFocused);
-        int top = frame.top() - RESERVED;
+        int top = stripTop(panel, frame);
         boolean onStrip = chatFocused && mouseY >= top && mouseY < top + HEIGHT;
         String hint = null;
 
@@ -242,6 +244,8 @@ public final class TabStrip {
         }
         if (button == 2) {
             ChatTabs.removeTab(panel, index);
+        } else if (button == 1) {
+            TabSettingsScreen.open(panel, panel.tabs().get(index));
         } else if (button == 0) {
             TabDrag.begin(panel, index, mouseX, mouseY);
         }
@@ -252,7 +256,11 @@ public final class TabStrip {
     }
 
     private static int stripTop(ChatPanel panel, boolean chatFocused) {
-        return ChatFrame.of(panel, chatFocused).top() - RESERVED;
+        return stripTop(panel, ChatFrame.of(panel, chatFocused));
+    }
+
+    static int stripTop(ChatPanel panel, ChatFrame frame) {
+        return panel.tabsBelow() ? frame.bottom() + HEIGHT_HANDLE_GAP : frame.top() - RESERVED;
     }
 
     private static boolean chatHidden() {
