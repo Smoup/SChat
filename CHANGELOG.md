@@ -1,3 +1,18 @@
+## 1.0.2
+
+- **Server binding**: a tab can be limited to a list of addresses, wildcards included —
+  `holyworld.ru, *.holyworld.ru`. Elsewhere the tab is hidden and receives no messages
+- **Tab colours**: separate colours for the plate and for the name, plus plate opacity
+- **Unread counter** can be turned off per tab; a hidden counter no longer raises the tab
+  strip while the chat is closed
+- Tabs can be reordered by dragging them within the strip
+- The chat now sits flush with the bottom while closed and lifts above the input line
+  while open, tab strip included
+- Chat borders are readable against a bright sky: solid outline got a dark backing, the
+  dashed one turned amber
+- Fixed: dragging a tab out no longer snaps the new chat to the cursor by its corner
+- Fixed: a new tab inherits colours and opacity from the first one
+
 ## 1.0.1
 
 - Filter mode switch: **Any** (one match is enough) or **All** (the message must satisfy
@@ -31,6 +46,22 @@ First release.
 - English and Russian, no Fabric API required
 
 ---
+
+## 1.0.2 (русский)
+
+- **Привязка к серверам**: вкладку можно ограничить списком адресов, в том числе с
+  масками — `holyworld.ru, *.holyworld.ru`. На других серверах вкладка скрыта и
+  сообщения в неё не идут
+- **Цвета вкладки**: отдельно цвет плашки и цвет названия, плюс прозрачность плашки
+- **Счётчик непрочитанных** отключается у каждой вкладки; скрытый счётчик больше не
+  поднимает полосу вкладок при закрытом чате
+- Вкладки можно менять местами перетаскиванием внутри полосы
+- Чат прижимается к самому низу, пока закрыт, и поднимается над строкой ввода, когда
+  открыт — вместе с полосой вкладок
+- Границы чата видно на светлом небе: у сплошной рамки появилась тёмная подложка,
+  пунктир стал жёлтым
+- Исправлено: вынесенная вкладка больше не прыгает к курсору нижним левым углом
+- Исправлено: новая вкладка перенимает цвета и прозрачность у первой
 
 ## 1.0.1 (русский)
 

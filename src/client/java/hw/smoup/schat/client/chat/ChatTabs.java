@@ -189,6 +189,21 @@ public final class ChatTabs {
         tab.markRead();
     }
 
+    public static void ensureAvailableTabs() {
+        for (ChatPanel panel : SchatConfig.get().panels()) {
+            if (panel.empty() || availableHere(panel.activeTab())) {
+                continue;
+            }
+            List<ChatTab> tabs = panel.tabs();
+            for (int index = 0; index < tabs.size(); index++) {
+                if (availableHere(tabs.get(index))) {
+                    select(panel, index);
+                    break;
+                }
+            }
+        }
+    }
+
     public static void rebuildAll() {
         invalidateClaims();
         for (ChatPanel panel : SchatConfig.get().panels()) {
@@ -251,8 +266,22 @@ public final class ChatTabs {
         accessor.schat$allMessages().clear();
     }
 
+    // Вкладка, привязанная к другому серверу, не показывается и не забирает сообщения:
+    // на чужом сервере остаются только вкладки без привязки.
+    public static boolean availableHere(ChatTab tab) {
+        return tab.matchesServer(currentServerAddress());
+    }
+
+    private static String currentServerAddress() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.getCurrentServer() == null) {
+            return null;
+        }
+        return minecraft.getCurrentServer().ip;
+    }
+
     private static boolean visibleIn(ChatTab tab, String text) {
-        if (!tab.accepts(text)) {
+        if (!availableHere(tab) || !tab.accepts(text)) {
             return false;
         }
         return tab.exclusive() || !claimedElsewhere(tab, text);
@@ -260,7 +289,7 @@ public final class ChatTabs {
 
     private static boolean claimedElsewhere(ChatTab tab, String text) {
         for (ChatTab other : claimingTabs()) {
-            if (other != tab && other.accepts(text)) {
+            if (other != tab && availableHere(other) && other.accepts(text)) {
                 return true;
             }
         }

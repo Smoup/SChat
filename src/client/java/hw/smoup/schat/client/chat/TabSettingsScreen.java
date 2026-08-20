@@ -26,8 +26,9 @@ public final class TabSettingsScreen extends Screen {
 
     private static final int PANEL_WIDTH = 320;
     private static final int ROW_HEIGHT = 22;
-    private static final int FILTER_ROWS = 4;
+    private static final int FILTER_ROWS = 3;
     private static final int LABEL_COLOR = 0xFFFFFFFF;
+    private static final int LABEL_COLUMN = 76;
     private static final int SCROLL_TRACK = 0x55FFFFFF;
     private static final int SCROLL_THUMB = 0xFFFFFFFF;
     private static final List<ChatFormatting> COLORS = Arrays.stream(ChatFormatting.values())
@@ -71,10 +72,13 @@ public final class TabSettingsScreen extends Screen {
         int left = (width - PANEL_WIDTH) / 2;
         int top = Math.max(10, height / 2 - 150);
         addNameRow(left, top);
-        addOpacityRow(left, top + ROW_HEIGHT);
-        addHistoryRow(left, top + ROW_HEIGHT * 2);
-        addDecoratorRows(left, top);
-        addFilterSection(left, top + ROW_HEIGHT * 6 + 8);
+        addTabLookRow(left, top + ROW_HEIGHT);
+        addUnreadRow(left, top + ROW_HEIGHT * 2);
+        addOpacityRow(left, top + ROW_HEIGHT * 3);
+        addHistoryRow(left, top + ROW_HEIGHT * 4);
+        addDecoratorRows(left, top + ROW_HEIGHT * 2);
+        addServersRow(left, top + ROW_HEIGHT * 8);
+        addFilterSection(left, top + ROW_HEIGHT * 9 + 8);
     }
 
     private void addNameRow(int left, int y) {
@@ -150,6 +154,70 @@ public final class TabSettingsScreen extends Screen {
                     target.setCopyFormat(tab.copyFormat());
                     target.setCopyColor(tab.copyColor());
                 });
+    }
+
+    private void addTabLookRow(int left, int y) {
+        SettingsSlider slider = new SettingsSlider(left + 80, y, 88, 18, tab.tabOpacity(),
+                TabSettingsScreen::percent, tab::setTabOpacity);
+        slider.setTooltip(tip("schat.settings.tab.opacity.tip"));
+        addRenderableWidget(slider);
+
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get("schat.settings.tab.background"))
+                                .withStyle(tab.tabColor()),
+                        press -> {
+                            tab.setTabColor(nextColor(tab.tabColor()));
+                            rebuildWidgets();
+                        })
+                .bounds(left + 172, y, 30, 18)
+                .tooltip(tip("schat.settings.tab.background.tip"))
+                .build());
+
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get("schat.settings.tab.text"))
+                                .withStyle(tab.tabTextColor()),
+                        press -> {
+                            tab.setTabTextColor(nextColor(tab.tabTextColor()));
+                            rebuildWidgets();
+                        })
+                .bounds(left + 206, y, 26, 18)
+                .tooltip(tip("schat.settings.tab.text.tip"))
+                .build());
+
+        addRenderableWidget(applyAllButton(left + 236, y, "schat.settings.all.tab.tip",
+                target -> {
+                    target.setTabColor(tab.tabColor());
+                    target.setTabTextColor(tab.tabTextColor());
+                    target.setTabOpacity(tab.tabOpacity());
+                }));
+    }
+
+    private void addUnreadRow(int left, int y) {
+        addRenderableWidget(Button.builder(
+                        Component.literal(Translations.get(tab.showUnread()
+                                ? "schat.settings.unread.on"
+                                : "schat.settings.unread.off")),
+                        press -> {
+                            tab.setShowUnread(!tab.showUnread());
+                            rebuildWidgets();
+                        })
+                .bounds(left + 80, y, 60, 18)
+                .tooltip(tip("schat.settings.unread.tip"))
+                .build());
+        addRenderableWidget(applyAllButton(left + 236, y, "schat.settings.all.unread.tip",
+                target -> target.setShowUnread(tab.showUnread())));
+    }
+
+    private void addServersRow(int left, int y) {
+        EditBox box = new EditBox(font, left + 80, y, 150, 18,
+                Component.literal(Translations.get("schat.settings.servers")));
+        box.setMaxLength(200);
+        box.setValue(tab.servers());
+        box.setResponder(tab::setServers);
+        box.setTooltip(tip("schat.settings.servers.tip"));
+        addRenderableWidget(box);
+        addRenderableWidget(applyAllButton(left + 236, y, "schat.settings.all.servers.tip",
+                target -> target.setServers(tab.servers())));
     }
 
     private void addFilterSection(int left, int filtersRow) {
@@ -364,7 +432,7 @@ public final class TabSettingsScreen extends Screen {
             return;
         }
         int left = (width - PANEL_WIDTH) / 2 + PANEL_WIDTH - 10;
-        int top = Math.max(10, height / 2 - 150) + ROW_HEIGHT * 7 + 8;
+        int top = Math.max(10, height / 2 - 150) + ROW_HEIGHT * 9 + 8;
         int trackHeight = FILTER_ROWS * ROW_HEIGHT - 4;
         int thumbHeight = Math.max(12, trackHeight * FILTER_ROWS / total);
         int maxScroll = total - FILTER_ROWS;
@@ -377,20 +445,25 @@ public final class TabSettingsScreen extends Screen {
     private void drawLabels(ChatOverlay.TextSink sink) {
         int left = (width - PANEL_WIDTH) / 2;
         int top = Math.max(10, height / 2 - 150);
-        sink.draw(font, title.getString(), left, top - 16, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.name"), left, top + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.opacity"),
-                left, top + ROW_HEIGHT + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.history"),
-                left, top + ROW_HEIGHT * 2 + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.stack"),
-                left, top + ROW_HEIGHT * 3 + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.nick"),
-                left, top + ROW_HEIGHT * 4 + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.copy"),
-                left, top + ROW_HEIGHT * 5 + 5, LABEL_COLOR);
-        sink.draw(font, Translations.get("schat.settings.filters"),
-                left, top + ROW_HEIGHT * 6 + 13, LABEL_COLOR);
+        String heading = title.getString();
+        sink.draw(font, heading, (width - font.width(heading)) / 2, top - 16, LABEL_COLOR);
+        drawLabel(sink, "schat.settings.name", left, top + 5);
+        drawLabel(sink, "schat.settings.tab", left, top + ROW_HEIGHT + 5);
+        drawLabel(sink, "schat.settings.unread", left, top + ROW_HEIGHT * 2 + 5);
+        drawLabel(sink, "schat.settings.opacity", left, top + ROW_HEIGHT * 3 + 5);
+        drawLabel(sink, "schat.settings.history", left, top + ROW_HEIGHT * 4 + 5);
+        drawLabel(sink, "schat.settings.stack", left, top + ROW_HEIGHT * 5 + 5);
+        drawLabel(sink, "schat.settings.nick", left, top + ROW_HEIGHT * 6 + 5);
+        drawLabel(sink, "schat.settings.copy", left, top + ROW_HEIGHT * 7 + 5);
+        drawLabel(sink, "schat.settings.servers", left, top + ROW_HEIGHT * 8 + 5);
+        drawLabel(sink, "schat.settings.filters", left, top + ROW_HEIGHT * 9 + 13);
+    }
+
+    // Подписи центрируются в колонке слева от виджетов: слова разной длины иначе
+    // висят рваным краем.
+    private void drawLabel(ChatOverlay.TextSink sink, String key, int left, int y) {
+        String text = Translations.get(key);
+        sink.draw(font, text, left + (LABEL_COLUMN - font.width(text)) / 2, y, LABEL_COLOR);
     }
 
     @Override

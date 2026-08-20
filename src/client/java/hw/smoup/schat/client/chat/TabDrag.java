@@ -20,6 +20,8 @@ public final class TabDrag {
     private static boolean dragging;
     private static int pressX;
     private static int pressY;
+    private static int grabX;
+    private static int grabY;
 
     private TabDrag() {
     }
@@ -36,6 +38,9 @@ public final class TabDrag {
         dragging = false;
         pressX = mouseX;
         pressY = mouseY;
+        ChatFrame frame = ChatFrame.of(source, true);
+        grabX = mouseX - TabStrip.tabLeft(source, true, tabIndex);
+        grabY = mouseY - TabStrip.stripTop(source, frame);
     }
 
     public static boolean dragging() {
@@ -70,7 +75,11 @@ public final class TabDrag {
         SchatConfig config = SchatConfig.get();
         ChatPanel target = TabStrip.panelAt(mouseX, mouseY);
         ChatPanel source = panel;
-        if (target == source || !ChatTabs.canRemoveTab(source)) {
+        if (target == source) {
+            reorder(source, mouseX, mouseY);
+            return;
+        }
+        if (!ChatTabs.canRemoveTab(source)) {
             ChatTabs.select(source, index);
             return;
         }
@@ -78,17 +87,46 @@ public final class TabDrag {
         if (tab == null) {
             return;
         }
-        if (target == null) {
+        boolean created = target == null;
+        if (created) {
             target = config.addPanel(source, mouseX, mouseY);
         }
         target.addTab(tab);
         ChatTabs.select(target, target.tabs().size() - 1);
+        if (created) {
+            alignToCursor(target, mouseX, mouseY);
+        }
         if (source.empty()) {
             config.removePanel(source);
         } else {
             ChatTabs.rebuild(source);
         }
         config.save();
+    }
+
+    // Новая панель встаёт так, чтобы вкладка осталась ровно под курсором: иначе она
+    // прыгает к нему нижним левым углом.
+    private static void alignToCursor(ChatPanel created, int mouseX, int mouseY) {
+        ChatFrame frame = ChatFrame.of(created, true);
+        int deltaX = mouseX - grabX - TabStrip.tabLeft(created, true, 0);
+        int deltaY = mouseY - grabY - TabStrip.stripTop(created, frame);
+        created.setOffset(created.offsetX() + deltaX, created.offsetY() + deltaY);
+    }
+
+    // Бросок на свою же полосу меняет порядок вкладок, а не переносит их куда-то.
+    private static void reorder(ChatPanel source, int mouseX, int mouseY) {
+        int dropIndex = TabStrip.hitTest(source, true, mouseX, mouseY);
+        if (dropIndex < 0 || dropIndex == index) {
+            ChatTabs.select(source, index);
+            return;
+        }
+        ChatTab moved = source.takeTab(index);
+        if (moved == null) {
+            return;
+        }
+        int insert = Math.min(dropIndex, source.tabs().size());
+        source.insertTab(insert, moved);
+        ChatTabs.select(source, insert);
     }
 
     public static void draw(RectSink rects, TextSink texts, Font font, int mouseX, int mouseY) {
@@ -106,9 +144,13 @@ public final class TabDrag {
         ChatFrame source = ChatFrame.of(panel, true);
         int width = source.right() - source.left();
         int height = source.bottom() - source.top();
-        outline(rects, mouseX, mouseY - height, mouseX + width, mouseY);
-        drawTab(rects, texts, font, tab, mouseX,
-                mouseY - height - TabStrip.RESERVED + TabStrip.HEIGHT / 2);
+        int left = mouseX - grabX;
+        int stripTop = mouseY - grabY;
+        int top = panel.tabsBelow()
+                ? stripTop - TabStrip.HEIGHT_HANDLE_GAP - height
+                : stripTop + TabStrip.RESERVED;
+        outline(rects, left, top, left + width, top + height);
+        drawTab(rects, texts, font, tab, left, stripTop + TabStrip.HEIGHT / 2);
     }
 
     private static void drawTab(RectSink rects, TextSink texts, Font font, ChatTab tab,

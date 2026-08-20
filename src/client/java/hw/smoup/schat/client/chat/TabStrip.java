@@ -114,6 +114,9 @@ public final class TabStrip {
         List<ChatTab> tabs = panel.tabs();
         int x = frame.left();
         for (int index = 0; index < tabs.size(); index++) {
+            if (!ChatTabs.availableHere(tabs.get(index))) {
+                continue;
+            }
             int width = tabWidth(font, tabs.get(index));
             if (mouseX >= x && mouseX < x + width) {
                 return index;
@@ -124,6 +127,21 @@ public final class TabStrip {
             return ADD_BUTTON;
         }
         return NOTHING;
+    }
+
+    static int tabLeft(ChatPanel panel, boolean chatFocused, int index) {
+        Font font = font();
+        int x = ChatFrame.of(panel, chatFocused).left();
+        if (font == null) {
+            return x;
+        }
+        List<ChatTab> tabs = panel.tabs();
+        for (int current = 0; current < index && current < tabs.size(); current++) {
+            if (ChatTabs.availableHere(tabs.get(current))) {
+                x += tabWidth(font, tabs.get(current)) + 1;
+            }
+        }
+        return x;
     }
 
     static int tabWidth(Font font, ChatTab tab) {
@@ -148,6 +166,9 @@ public final class TabStrip {
         List<ChatTab> tabs = panel.tabs();
         for (int index = 0; index < tabs.size(); index++) {
             ChatTab tab = tabs.get(index);
+            if (!ChatTabs.availableHere(tab)) {
+                continue;
+            }
             int width = tabWidth(font, tab);
             boolean hovered = onStrip && mouseX >= x && mouseX < x + width;
             drawTab(rects, texts, font, tab, x, top, index == panel.activeIndex(), hovered);
@@ -181,12 +202,11 @@ public final class TabStrip {
         int width = PADDING + nameWidth + PADDING + (badge == null ? 0 : badgeWidth + PADDING);
         int bottom = top + HEIGHT;
 
-        rects.fill(left, top, left + width, bottom,
-                active ? TAB_ACTIVE : hovered ? TAB_HOVER : TAB_IDLE);
+        rects.fill(left, top, left + width, bottom, tab.tabBackground(active || hovered));
         if (active) {
             rects.fill(left, bottom - 1, left + width, bottom, TAB_UNDERLINE);
         }
-        texts.draw(font, tab.name(), left + PADDING, top + 2, active ? NAME_ACTIVE : NAME_IDLE);
+        texts.draw(font, tab.name(), left + PADDING, top + 2, tab.tabForeground(active || hovered));
         if (badge != null) {
             drawBadge(rects, texts, font, badge, badgeWidth,
                     left + PADDING + nameWidth + PADDING, top);

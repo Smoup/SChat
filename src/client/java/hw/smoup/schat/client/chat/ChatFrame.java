@@ -6,17 +6,37 @@ import net.minecraft.client.Minecraft;
 
 public record ChatFrame(int left, int top, int right, int bottom) {
 
+    public static final int CHAT_INPUT_HEIGHT = 14;
+
     private static final int VANILLA_BACKGROUND_PAD = 12;
+    private static final int INPUT_GAP = 4;
 
     public static ChatFrame of(ChatPanel panel, boolean chatFocused) {
         int offsetX = panel.effectiveOffsetX();
-        int offsetY = panel.effectiveOffsetY();
+        int offsetY = panel.effectiveOffsetY() + stateOffsetY(panel, chatFocused);
         double scale = panel.scale();
         return new ChatFrame(
                 offsetX,
                 offsetY + baseTop(scale, panel.effectiveHeight(chatFocused)),
                 offsetX + baseRight(scale, panel.effectiveWidth()),
                 offsetY + baseBottom(scale));
+    }
+
+    // Ваниль держит чат в 40 пикселях от низа под строку ввода. Пока чат закрыт, это
+    // место пустует, а с открытым чатом низ панели упирается в саму строку. Смотрим на
+    // фактическое положение: панель у низа подтягивается, поднятая к центру не трогается.
+    public static int stateOffsetY(ChatPanel panel, boolean chatFocused) {
+        int guiHeight = guiHeight();
+        if (guiHeight <= 0) {
+            return 0;
+        }
+        int tabStrip = panel.tabsBelow() ? TabStrip.RESERVED : 0;
+        int bottom = panel.effectiveOffsetY() + baseBottom(panel.scale()) + tabStrip;
+        if (chatFocused) {
+            return Math.min(0, guiHeight - CHAT_INPUT_HEIGHT - INPUT_GAP - bottom);
+        }
+        int lowestZone = guiHeight - CHAT_INPUT_HEIGHT - SchatConfig.BOTTOM_MARGIN;
+        return bottom >= lowestZone ? guiHeight - bottom : 0;
     }
 
     public static int baseRight(double scale, int width) {
@@ -35,9 +55,10 @@ public record ChatFrame(int left, int top, int right, int bottom) {
         return round(mouseX - panel.effectiveOffsetX() - VANILLA_BACKGROUND_PAD * panel.scale());
     }
 
-    public static int heightFromMouse(ChatPanel panel, double mouseY) {
+    public static int heightFromMouse(ChatPanel panel, boolean chatFocused, double mouseY) {
         double scale = panel.scale();
-        return bottomLine(scale) - round((mouseY - panel.effectiveOffsetY()) / scale);
+        int offsetY = panel.effectiveOffsetY() + stateOffsetY(panel, chatFocused);
+        return bottomLine(scale) - round((mouseY - offsetY) / scale);
     }
 
     public static int maxWidth(double scale) {

@@ -26,7 +26,8 @@ public final class ChatLinks {
                 continue;
             }
             Style style = styleIn(component, font, mouseX - panel.effectiveOffsetX(),
-                    mouseY - panel.effectiveOffsetY(), insertions);
+                    mouseY - panel.effectiveOffsetY() - ChatFrame.stateOffsetY(panel, true),
+                    insertions);
             if (style != null) {
                 return style;
             }

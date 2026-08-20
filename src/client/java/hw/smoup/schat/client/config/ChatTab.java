@@ -4,6 +4,7 @@ import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public final class ChatTab {
 
@@ -17,12 +18,19 @@ public final class ChatTab {
     public static final ChatFormatting DEFAULT_NICK_COLOR = ChatFormatting.GREEN;
     public static final String DEFAULT_COPY_FORMAT = "[Copy]";
     public static final ChatFormatting DEFAULT_COPY_COLOR = ChatFormatting.DARK_AQUA;
+    public static final ChatFormatting DEFAULT_TAB_COLOR = ChatFormatting.BLACK;
+    public static final ChatFormatting DEFAULT_TAB_TEXT_COLOR = ChatFormatting.WHITE;
+    public static final double DEFAULT_TAB_OPACITY = 0.75;
 
     private String name = "";
     private int historyLimit = DEFAULT_HISTORY;
     private Double backgroundOpacity;
     private boolean exclusive;
     private boolean matchAllFilters;
+    private boolean showUnread = true;
+    private String tabColor = DEFAULT_TAB_COLOR.name();
+    private String tabTextColor = DEFAULT_TAB_TEXT_COLOR.name();
+    private double tabOpacity = DEFAULT_TAB_OPACITY;
     private boolean nickButton;
     private String nickFormat = DEFAULT_NICK_FORMAT;
     private String nickColor = DEFAULT_NICK_COLOR.name();
@@ -32,6 +40,7 @@ public final class ChatTab {
     private boolean stackEnabled = true;
     private String stackFormat = DEFAULT_STACK_FORMAT;
     private String stackColor = DEFAULT_STACK_COLOR.name();
+    private String servers = "";
     private List<MessageFilter> filters = new ArrayList<>();
 
     private transient int unread;
@@ -72,6 +81,10 @@ public final class ChatTab {
     public void copyLookFrom(ChatTab other) {
         setHistoryLimit(other.historyLimit());
         setBackgroundOpacity(other.backgroundOpacity());
+        setTabColor(other.tabColor());
+        setTabTextColor(other.tabTextColor());
+        setTabOpacity(other.tabOpacity());
+        setShowUnread(other.showUnread());
         setStackEnabled(other.stackEnabled());
         setStackFormat(other.stackFormat());
         setStackColor(other.stackColor());
@@ -89,6 +102,45 @@ public final class ChatTab {
 
     public void setExclusive(boolean exclusive) {
         this.exclusive = exclusive;
+    }
+
+    public ChatFormatting tabColor() {
+        return color(tabColor, DEFAULT_TAB_COLOR);
+    }
+
+    public void setTabColor(ChatFormatting color) {
+        tabColor = color == null ? DEFAULT_TAB_COLOR.name() : color.name();
+    }
+
+    public ChatFormatting tabTextColor() {
+        return color(tabTextColor, DEFAULT_TAB_TEXT_COLOR);
+    }
+
+    public void setTabTextColor(ChatFormatting color) {
+        tabTextColor = color == null ? DEFAULT_TAB_TEXT_COLOR.name() : color.name();
+    }
+
+    public int tabForeground(boolean active) {
+        Integer rgb = tabTextColor().getColor();
+        int base = rgb == null ? 0xFFFFFF : rgb;
+        return ((active ? 0xFF : 0xAA) << 24) | (base & 0xFFFFFF);
+    }
+
+    public double tabOpacity() {
+        return tabOpacity;
+    }
+
+    public void setTabOpacity(double opacity) {
+        tabOpacity = Math.min(1.0, Math.max(0.0, opacity));
+    }
+
+    // Плашка вкладки: цвет из палитры Minecraft плюс своя прозрачность. Неактивная
+    // приглушается, чтобы активная читалась без дополнительной обводки.
+    public int tabBackground(boolean active) {
+        Integer rgb = tabColor().getColor();
+        int base = rgb == null ? 0 : rgb;
+        int alpha = (int) Math.round(tabOpacity * 255.0 * (active ? 1.0 : 0.6));
+        return (Math.min(255, Math.max(0, alpha)) << 24) | (base & 0xFFFFFF);
     }
 
     public boolean matchAllFilters() {
@@ -182,6 +234,44 @@ public final class ChatTab {
         stackColor = color == null ? DEFAULT_STACK_COLOR.name() : color.name();
     }
 
+    public String servers() {
+        return servers;
+    }
+
+    public void setServers(String servers) {
+        this.servers = servers == null ? "" : servers;
+    }
+
+    // Пустой список — вкладка живёт везде. Маска «*.holyworld.ru» ловит любой поддомен,
+    // сам «holyworld.ru» тоже подходит: играют обычно и по короткому адресу.
+    public boolean matchesServer(String address) {
+        if (servers.isBlank()) {
+            return true;
+        }
+        if (address == null) {
+            return false;
+        }
+        String host = address.toLowerCase(Locale.ROOT).split(":")[0];
+        for (String raw : servers.toLowerCase(Locale.ROOT).split("[,;\\s]+")) {
+            String mask = raw.trim();
+            if (!mask.isEmpty() && hostMatches(host, mask)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hostMatches(String host, String mask) {
+        if (!mask.startsWith("*")) {
+            return host.equals(mask);
+        }
+        String suffix = mask.substring(1);
+        if (suffix.startsWith(".")) {
+            return host.equals(suffix.substring(1)) || host.endsWith(suffix);
+        }
+        return host.endsWith(suffix);
+    }
+
     public List<MessageFilter> filters() {
         return filters;
     }
@@ -190,8 +280,16 @@ public final class ChatTab {
         this.filters = new ArrayList<>(filters);
     }
 
+    public boolean showUnread() {
+        return showUnread;
+    }
+
+    public void setShowUnread(boolean showUnread) {
+        this.showUnread = showUnread;
+    }
+
     public int unread() {
-        return unread;
+        return showUnread ? unread : 0;
     }
 
     public void addUnread() {

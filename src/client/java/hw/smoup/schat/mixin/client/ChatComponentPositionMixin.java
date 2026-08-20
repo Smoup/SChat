@@ -1,5 +1,6 @@
 package hw.smoup.schat.mixin.client;
 
+import hw.smoup.schat.client.chat.ChatFrame;
 import hw.smoup.schat.client.chat.ChatTabs;
 import hw.smoup.schat.client.chat.TabStrip;
 import hw.smoup.schat.client.config.ChatPanel;
@@ -167,10 +168,13 @@ public abstract class ChatComponentPositionMixin {
         if (panel == null || panel.empty()) {
             return;
         }
+        int offsetX = panel.effectiveOffsetX();
+        int offsetY = panel.effectiveOffsetY()
+                + ChatFrame.stateOffsetY(panel, isChatFocused());
         /*? if >=1.21.6 {*/
-        graphics.pose().translate(panel.effectiveOffsetX(), panel.effectiveOffsetY());
+        graphics.pose().translate(offsetX, offsetY);
         /*?} else {*/
-        /*graphics.pose().translate(panel.effectiveOffsetX(), panel.effectiveOffsetY(), 0.0f);
+        /*graphics.pose().translate(offsetX, offsetY, 0.0f);
         *//*?}*/
     }
 

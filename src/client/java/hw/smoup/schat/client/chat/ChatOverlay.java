@@ -32,8 +32,9 @@ public final class ChatOverlay {
     private static final int SCALE_SIZE = 7;
     private static final double SCALE_PER_PIXEL = 0.01;
 
-    private static final int LINE_FOCUSED = 0x55FFFFFF;
-    private static final int LINE_UNFOCUSED = 0x8866CCFF;
+    private static final int LINE_FOCUSED = 0xDDFFFFFF;
+    private static final int LINE_UNFOCUSED = 0xFFFFC94D;
+    private static final int LINE_SHADOW = 0xAA000000;
     private static final int HANDLE_IDLE = 0xAAFFFFFF;
     private static final int HANDLE_HOVER = 0xFFFFFFFF;
     private static final int HANDLE_DRAG = 0xFFFFC94D;
@@ -228,7 +229,8 @@ public final class ChatOverlay {
                     panel.setWidth(ChatFrame.widthFromMouse(panel, mouseX));
                 }
                 if (dragging.handle().affectsHeight()) {
-                    panel.setHeight(dragging.focused(), ChatFrame.heightFromMouse(panel, mouseY));
+                    panel.setHeight(dragging.focused(),
+                            ChatFrame.heightFromMouse(panel, dragging.focused(), mouseY));
                 }
             }
         }
@@ -291,6 +293,14 @@ public final class ChatOverlay {
 
     private static void drawFrame(RectSink sink, ChatPanel panel, Target active) {
         ChatFrame frame = ChatFrame.of(panel, true);
+        // Тёмная подложка под каждой линией: на светлом небе белая рамка иначе исчезает.
+        sink.fill(frame.left() - 1, frame.top() - 1, frame.right() + 1, frame.top(), LINE_SHADOW);
+        sink.fill(frame.right() + 1, frame.top(), frame.right() + 2, frame.bottom() + 2,
+                LINE_SHADOW);
+        sink.fill(frame.left() - 1, frame.bottom() + 1, frame.right() + 1, frame.bottom() + 2,
+                LINE_SHADOW);
+        sink.fill(frame.left() - 1, frame.top(), frame.left(), frame.bottom() + 1, LINE_SHADOW);
+
         sink.fill(frame.left(), frame.top(), frame.right(), frame.top() + 1, LINE_FOCUSED);
         sink.fill(frame.right(), frame.top(), frame.right() + 1, frame.bottom() + 1, LINE_FOCUSED);
         sink.fill(frame.left(), frame.bottom(), frame.right(), frame.bottom() + 1, LINE_FOCUSED);
@@ -385,6 +395,7 @@ public final class ChatOverlay {
     }
 
     private static void dashedHorizontal(RectSink sink, int from, int to, int y, int color) {
+        sink.fill(from, y - 1, to, y + 2, LINE_SHADOW);
         for (int x = from; x < to; x += 4) {
             sink.fill(x, y, Math.min(x + 2, to), y + 1, color);
         }

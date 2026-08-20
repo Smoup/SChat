@@ -21,7 +21,7 @@ public final class ChatPanel {
     public static final int DEFAULT_HEIGHT_UNFOCUSED = 90;
     public static final double DEFAULT_SCALE = 1.0;
 
-    private static final int CHAT_INPUT_HEIGHT = 14;
+    private static final int CHAT_INPUT_HEIGHT = ChatFrame.CHAT_INPUT_HEIGHT;
 
     private int width = DEFAULT_WIDTH;
     private double scale = DEFAULT_SCALE;
@@ -238,6 +238,10 @@ public final class ChatPanel {
 
     public void addTab(ChatTab tab) {
         tabs.add(tab);
+    }
+
+    public void insertTab(int index, ChatTab tab) {
+        tabs.add(Math.min(Math.max(index, 0), tabs.size()), tab);
     }
 
     public boolean removeTab(int index) {
