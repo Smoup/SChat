@@ -1,3 +1,14 @@
+## 1.0.3
+
+- Fixed: chat frames and handles no longer cover the input line and the command
+  suggestion list — the whole overlay is now drawn behind the chat screen
+- Fixed: clicking a command suggestion no longer grabs a panel border and starts a resize
+- Fixed: the tab strip of a closed chat now pops up only for the panel that actually has
+  unread messages, not for every panel at once
+- Fixed: hover hints are drawn on top of the frames instead of sliding under them
+- The server list accepts addresses in quotes and brackets, so a block copied straight
+  out of a JSON array works as is
+
 ## 1.0.2
 
 - **Server binding**: a tab can be limited to a list of addresses, wildcards included —
@@ -46,6 +57,18 @@ First release.
 - English and Russian, no Fabric API required
 
 ---
+
+## 1.0.3 (русский)
+
+- Исправлено: рамки и ручки чата больше не перекрывают строку ввода и список подсказок
+  команд — весь оверлей рисуется за экраном чата
+- Исправлено: клик по подсказке команды больше не цепляет границу панели и не начинает
+  изменение размера
+- Исправлено: полоса вкладок у закрытого чата всплывает только у той панели, где
+  действительно есть непрочитанное, а не у всех сразу
+- Исправлено: подсказки при наведении рисуются поверх рамок, а не под ними
+- Список серверов принимает адреса в кавычках и скобках — кусок, скопированный прямо из
+  JSON-массива, работает как есть
 
 ## 1.0.2 (русский)
 

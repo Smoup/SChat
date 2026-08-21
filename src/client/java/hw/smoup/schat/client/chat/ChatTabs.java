@@ -211,12 +211,10 @@ public final class ChatTabs {
         }
     }
 
-    public static boolean anyUnread() {
-        for (ChatPanel panel : SchatConfig.get().panels()) {
-            for (ChatTab tab : panel.tabs()) {
-                if (tab.unread() > 0) {
-                    return true;
-                }
+    public static boolean anyUnread(ChatPanel panel) {
+        for (ChatTab tab : panel.tabs()) {
+            if (tab.unread() > 0) {
+                return true;
             }
         }
         return false;

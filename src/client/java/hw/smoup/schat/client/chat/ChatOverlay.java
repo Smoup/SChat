@@ -68,8 +68,17 @@ public final class ChatOverlay {
         }
     }
 
-    public static void render(RectSink rects, TextSink texts, int mouseX, int mouseY) {
-        if (!SchatConfig.get().active()) {
+    // Порядок проходов: вкладки, поверх них рамки панелей, и только затем подсказки —
+    // иначе всплывашка вкладки уезжает под рамку соседней панели.
+    public static void render(RectSink rects, TextSink texts, boolean chatFocused,
+                              int mouseX, int mouseY) {
+        String hint = TabStrip.renderTabs(rects, texts, chatFocused, mouseX, mouseY);
+        renderFrames(rects, texts, mouseX, mouseY);
+        TabStrip.renderHint(rects, texts, hint, mouseX, mouseY);
+    }
+
+    private static void renderFrames(RectSink rects, TextSink texts, int mouseX, int mouseY) {
+        if (!SchatConfig.get().active() || !chatScreenOpen()) {
             return;
         }
         Target hovered = hitTest(mouseX, mouseY);

@@ -46,12 +46,12 @@ public final class TabStrip {
         TabDrag.onMouseButton(button, action);
     }
 
-    public static void renderAll(RectSink rects, TextSink texts, boolean chatFocused,
-                                 int mouseX, int mouseY) {
+    public static String renderTabs(RectSink rects, TextSink texts, boolean chatFocused,
+                                    int mouseX, int mouseY) {
         TabDrag.update(mouseX, mouseY);
         Font font = font();
         if (font == null) {
-            return;
+            return null;
         }
         String hint = null;
         for (ChatPanel panel : SchatConfig.get().panels()) {
@@ -59,6 +59,15 @@ public final class TabStrip {
             if (panelHint != null) {
                 hint = panelHint;
             }
+        }
+        return hint;
+    }
+
+    public static void renderHint(RectSink rects, TextSink texts, String hint,
+                                  int mouseX, int mouseY) {
+        Font font = font();
+        if (font == null) {
+            return;
         }
         if (TabDrag.dragging()) {
             TabDrag.draw(rects, texts, font, mouseX, mouseY);
@@ -94,13 +103,13 @@ public final class TabStrip {
         return null;
     }
 
-    public static boolean visible(boolean chatFocused) {
-        return !chatHidden() && (chatFocused || ChatTabs.anyUnread());
+    public static boolean visible(ChatPanel panel, boolean chatFocused) {
+        return !chatHidden() && (chatFocused || ChatTabs.anyUnread(panel));
     }
 
     public static int hitTest(ChatPanel panel, boolean chatFocused, double mouseX, double mouseY) {
         Font font = font();
-        if (font == null || panel.empty() || !visible(chatFocused)) {
+        if (font == null || panel.empty() || !visible(panel, chatFocused)) {
             return NOTHING;
         }
         int top = stripTop(panel, chatFocused);
@@ -154,7 +163,7 @@ public final class TabStrip {
 
     private static String renderPanel(RectSink rects, TextSink texts, Font font, ChatPanel panel,
                                       boolean chatFocused, int mouseX, int mouseY) {
-        if (panel.empty() || !visible(chatFocused)) {
+        if (panel.empty() || !visible(panel, chatFocused)) {
             return null;
         }
         ChatFrame frame = ChatFrame.of(panel, chatFocused);

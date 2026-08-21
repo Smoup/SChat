@@ -7,10 +7,12 @@ import hw.smoup.schat.client.chat.TabStrip;
 import hw.smoup.schat.client.config.ChatPanel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,6 +27,9 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(ChatScreen.class)
 public abstract class ChatScreenMouseMixin {
 
+    @Shadow
+    CommandSuggestions commandSuggestions;
+
     //? if >=1.21.11 {
     @Invoker("insertionClickMode")
     abstract boolean schat$insertionClickMode();
@@ -33,11 +38,14 @@ public abstract class ChatScreenMouseMixin {
     abstract boolean schat$handleComponentClicked(Style style, boolean insertion);
     //?}
 
+    // Подсказки команд рисуются поверх панелей, поэтому список разбирает клик первым.
+    // Промах по нему ваниль повторит вхолостую — mouseClicked без попадания ничего не делает.
     //? if >=1.21.9 {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void schat$click(MouseButtonEvent event, boolean doubleClick,
                              CallbackInfoReturnable<Boolean> cir) {
-        if (schat$handle(event.x(), event.y(), event.button())) {
+        if (commandSuggestions.mouseClicked(event)
+                || schat$handle(event.x(), event.y(), event.button())) {
             cir.setReturnValue(true);
         }
     }
@@ -45,7 +53,8 @@ public abstract class ChatScreenMouseMixin {
     /*@Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void schat$click(double mouseX, double mouseY, int button,
                              CallbackInfoReturnable<Boolean> cir) {
-        if (schat$handle(mouseX, mouseY, button)) {
+        if (commandSuggestions.mouseClicked(mouseX, mouseY, button)
+                || schat$handle(mouseX, mouseY, button)) {
             cir.setReturnValue(true);
         }
     }

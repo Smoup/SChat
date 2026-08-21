@@ -4,7 +4,7 @@
 
 mod.id = "schat"
 mod.name = "SChat"
-mod.version = "1.0.2"
+mod.version = "1.0.3"
 
 loomx.loom_version = "1.17-SNAPSHOT"
 

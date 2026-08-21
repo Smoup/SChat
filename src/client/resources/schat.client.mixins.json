@@ -10,7 +10,6 @@
     "ChatComponentMixin",
     "ChatComponentPositionMixin",
     "ChatScreenMouseMixin",
-    "ChatScreenRenderMixin",
     "MouseHandlerMixin"
   ],
   "injectors": {

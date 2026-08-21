@@ -22,6 +22,8 @@ public final class ChatTab {
     public static final ChatFormatting DEFAULT_TAB_TEXT_COLOR = ChatFormatting.WHITE;
     public static final double DEFAULT_TAB_OPACITY = 0.75;
 
+    private static final String SERVER_SEPARATORS = "[,;\\s\\[\\]\"']+";
+
     private String name = "";
     private int historyLimit = DEFAULT_HISTORY;
     private Double backgroundOpacity;
@@ -244,6 +246,8 @@ public final class ChatTab {
 
     // Пустой список — вкладка живёт везде. Маска «*.holyworld.ru» ловит любой поддомен,
     // сам «holyworld.ru» тоже подходит: играют обычно и по короткому адресу.
+    // Кавычки и скобки идут в разделители: список часто копируют куском JSON-массива,
+    // а в адресе хоста этих символов не бывает.
     public boolean matchesServer(String address) {
         if (servers.isBlank()) {
             return true;
@@ -252,7 +256,7 @@ public final class ChatTab {
             return false;
         }
         String host = address.toLowerCase(Locale.ROOT).split(":")[0];
-        for (String raw : servers.toLowerCase(Locale.ROOT).split("[,;\\s]+")) {
+        for (String raw : servers.toLowerCase(Locale.ROOT).split(SERVER_SEPARATORS)) {
             String mask = raw.trim();
             if (!mask.isEmpty() && hostMatches(host, mask)) {
                 return true;

@@ -1,8 +1,8 @@
 package hw.smoup.schat.mixin.client;
 
 import hw.smoup.schat.client.chat.ChatFrame;
+import hw.smoup.schat.client.chat.ChatOverlay;
 import hw.smoup.schat.client.chat.ChatTabs;
-import hw.smoup.schat.client.chat.TabStrip;
 import hw.smoup.schat.client.config.ChatPanel;
 import hw.smoup.schat.client.config.SchatConfig;
 import net.minecraft.client.OptionInstance;
@@ -145,7 +145,7 @@ public abstract class ChatComponentPositionMixin {
                         hovered);
             }
         }
-        TabStrip.renderAll(graphics::fill, graphics::text, isChatFocused(), mouseX, mouseY);
+        ChatOverlay.render(graphics::fill, graphics::text, isChatFocused(), mouseX, mouseY);
     }
 
     @Redirect(method = "extractRenderState(Lnet/minecraft/client/gui/components/ChatComponent$ChatGraphicsAccess;IILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;)V",
@@ -195,7 +195,7 @@ public abstract class ChatComponentPositionMixin {
                 schat$renderPanel(component, graphics, tickCount, mouseX, mouseY, focused, hovered);
             }
         }
-        TabStrip.renderAll(graphics::fill, graphics::drawString, isChatFocused(), mouseX, mouseY);
+        ChatOverlay.render(graphics::fill, graphics::drawString, isChatFocused(), mouseX, mouseY);
     }
 
     @Unique
