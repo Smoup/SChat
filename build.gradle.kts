@@ -68,6 +68,14 @@ val modSourcesJarFile = loomx.modSourcesJar.map { it.archiveFile }
 // Отдельная Modrinth-версия на каждый MC-узел: game_versions берём из toml.
 // Версии — реальные субпроекты (:1.20.6, :1.21.11, ...), поэтому неквалифицированный
 // ./gradlew publishMods публикует сразу все. См. шапку stonecutter.gradle.kts.
+// --- Деплой в клиент лаунчера ----------------------------------------------
+// Задача живёт только в субпроекте 1.21.11, поэтому ./gradlew deployMod собирает
+// и кладёт именно эту версию, какая бы ни была активна в stonecutter.
+val deployTargetVersion = "1.21.11"
+val deployDir: Provider<String> = providers.gradleProperty("deploy.dir").orElse(
+    "C:/Users/smoup/AppData/Roaming/.tlauncher/legacy/Minecraft/game/home/Fabric $deployTargetVersion/mods"
+)
+
 val modrinthId: String = sc.properties["publish.modrinth_id"]
 val publishGameVersionsRaw: String = sc.properties["publish.game_versions"]
 val publishGameVersions: List<String> =
@@ -126,5 +134,37 @@ tasks {
         from(modJarFile, modSourcesJarFile)
         into(rootProject.layout.buildDirectory.dir("libs/$modVersion"))
         dependsOn("build")
+    }
+
+    if (currentMc == deployTargetVersion) {
+        register("deployMod") {
+            group = "build"
+            description = "Кладёт jar в папку модов клиента Fabric $deployTargetVersion"
+            dependsOn("build")
+
+            val jarFile = modJarRegularFile
+            val targetDir = deployDir
+            doLast {
+                val mods = file(targetDir.get())
+                if (!mods.isDirectory) {
+                    throw GradleException("Папка модов не найдена: $mods")
+                }
+                mods.listFiles { file ->
+                    file.isFile && file.name.startsWith("SChat-") && file.name.endsWith(".jar")
+                }?.forEach { old ->
+                    if (!old.delete()) {
+                        throw GradleException("Не удалось удалить $old — закрой Minecraft, файл занят игрой")
+                    }
+                }
+                val jar = jarFile.get().asFile
+                val target = mods.resolve(jar.name)
+                try {
+                    jar.copyTo(target, overwrite = true)
+                } catch (e: java.io.IOException) {
+                    throw GradleException("Не удалось записать $target — закрой Minecraft, файл занят игрой", e)
+                }
+                logger.lifecycle("SChat -> $target")
+            }
+        }
     }
 }

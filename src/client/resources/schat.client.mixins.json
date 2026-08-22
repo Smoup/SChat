@@ -10,6 +10,7 @@
     "ChatComponentMixin",
     "ChatComponentPositionMixin",
     "ChatScreenMouseMixin",
+    "MinecraftTickMixin",
     "MouseHandlerMixin"
   ],
   "injectors": {

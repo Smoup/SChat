@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public final class ChatTabs {
 
@@ -30,6 +31,8 @@ public final class ChatTabs {
     private static List<Entry> snapshot;
     private static List<ChatTab> claimingTabs;
     private static boolean rebuilding;
+    private static boolean inWorld;
+    private static String lastServerAddress;
 
     private ChatTabs() {
     }
@@ -189,23 +192,54 @@ public final class ChatTabs {
         tab.markRead();
     }
 
-    public static void ensureAvailableTabs() {
+    // Ваниль зовёт getWidth/getScale из середины обхода своей же истории сообщений,
+    // а мы на них висим миксином. Значит трогать вкладки и перестраивать чат можно
+    // только из тика: иначе rebuild рвёт список под ногами у restoreState.
+    public static void onClientTick() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.level == null) {
+            inWorld = false;
+            return;
+        }
+        if (!SchatConfig.get().active()) {
+            return;
+        }
+        String address = currentServerAddress();
+        if (inWorld && Objects.equals(address, lastServerAddress)) {
+            return;
+        }
+        inWorld = true;
+        lastServerAddress = address;
+        rebuildAll();
+    }
+
+    private static void ensureAvailableTabs() {
         for (ChatPanel panel : SchatConfig.get().panels()) {
-            if (panel.empty() || availableHere(panel.activeTab())) {
-                continue;
-            }
-            List<ChatTab> tabs = panel.tabs();
-            for (int index = 0; index < tabs.size(); index++) {
-                if (availableHere(tabs.get(index))) {
-                    select(panel, index);
-                    break;
-                }
+            if (!panel.empty()) {
+                panel.setShownIndex(availableIndex(panel));
             }
         }
     }
 
+    // Выбранная игроком вкладка в приоритете: как только она снова доступна,
+    // панель возвращается к ней сама.
+    private static int availableIndex(ChatPanel panel) {
+        List<ChatTab> tabs = panel.tabs();
+        int chosen = panel.chosenIndex();
+        if (chosen < tabs.size() && availableHere(tabs.get(chosen))) {
+            return chosen;
+        }
+        for (int index = 0; index < tabs.size(); index++) {
+            if (availableHere(tabs.get(index))) {
+                return index;
+            }
+        }
+        return chosen;
+    }
+
     public static void rebuildAll() {
         invalidateClaims();
+        ensureAvailableTabs();
         for (ChatPanel panel : SchatConfig.get().panels()) {
             rebuild(panel);
         }

@@ -171,7 +171,6 @@ public final class SchatConfig {
             panel.setScale(vanillaScale);
             lastVanillaScale = vanillaScale;
         }
-        ChatTabs.ensureAvailableTabs();
     }
 
     private void pushToVanilla() {

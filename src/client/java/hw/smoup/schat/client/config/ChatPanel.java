@@ -45,6 +45,7 @@ public final class ChatPanel {
     private final transient RepeatState repeat = new RepeatState();
     private transient boolean primary;
     private transient ChatComponent component;
+    private transient int shownTab = -1;
 
     public boolean primary() {
         return primary;
@@ -225,15 +226,26 @@ public final class ChatPanel {
     }
 
     public ChatTab activeTab() {
-        return tabs.get(activeTab);
+        return tabs.get(activeIndex());
     }
 
     public int activeIndex() {
+        return shownTab >= 0 && shownTab < tabs.size() ? shownTab : activeTab;
+    }
+
+    // Выбор игрока, он же то, что лежит в конфиге. На чужом сервере панель показывает
+    // не его, а подменённую вкладку, и выбор должен пережить эту подмену.
+    public int chosenIndex() {
         return activeTab;
     }
 
     public void setActiveIndex(int index) {
         activeTab = tabs.isEmpty() ? 0 : Math.min(Math.max(index, 0), tabs.size() - 1);
+        shownTab = -1;
+    }
+
+    public void setShownIndex(int index) {
+        shownTab = index == activeTab ? -1 : index;
     }
 
     public void addTab(ChatTab tab) {

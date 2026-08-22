@@ -1,3 +1,14 @@
+## 1.0.4
+
+- Fixed: switching between servers no longer drops you with a network protocol error — the
+  chat was rebuilt while the game was still restoring its message history, and the crash hit
+  whenever a server-bound tab was the active one
+- Fixed: the tab you picked survives the switch. While it is unavailable the panel falls back
+  to another one, but your choice is no longer overwritten and the panel returns to it by
+  itself once the tab is available again
+- Fixed: filtered messages no longer end up in the "All" tab after a switch — tabs that claim
+  messages are re-checked as soon as the address of the new server is known
+
 ## 1.0.3
 
 - Fixed: chat frames and handles no longer cover the input line and the command
@@ -57,6 +68,18 @@ First release.
 - English and Russian, no Fabric API required
 
 ---
+
+## 1.0.4 (русский)
+
+- Исправлено: переход между серверами больше не выкидывает с ошибкой сетевого протокола —
+  чат перестраивался прямо во время того, как игра восстанавливала историю сообщений, и
+  краш ловился, когда активной была вкладка с привязкой к серверам
+- Исправлено: выбранная вкладка переживает переход. Пока она недоступна, панель показывает
+  другую, но сам выбор больше не перезаписывается, и панель возвращается к нему сама, как
+  только вкладка снова доступна
+- Исправлено: отфильтрованные сообщения больше не попадают во вкладку «Всё» после перехода —
+  вкладки, забирающие сообщения себе, пересчитываются, как только известен адрес нового
+  сервера
 
 ## 1.0.3 (русский)
 
