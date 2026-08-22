@@ -71,10 +71,10 @@ val modSourcesJarFile = loomx.modSourcesJar.map { it.archiveFile }
 // --- Деплой в клиент лаунчера ----------------------------------------------
 // Задача живёт только в субпроекте 1.21.11, поэтому ./gradlew deployMod собирает
 // и кладёт именно эту версию, какая бы ни была активна в stonecutter.
+// Путь к папке модов — свойство deploy.dir: держим его в личном
+// ~/.gradle/gradle.properties, чтобы он не уезжал в репозиторий.
 val deployTargetVersion = "1.21.11"
-val deployDir: Provider<String> = providers.gradleProperty("deploy.dir").orElse(
-    "C:/Users/smoup/AppData/Roaming/.tlauncher/legacy/Minecraft/game/home/Fabric $deployTargetVersion/mods"
-)
+val deployDir: Provider<String> = providers.gradleProperty("deploy.dir")
 
 val modrinthId: String = sc.properties["publish.modrinth_id"]
 val publishGameVersionsRaw: String = sc.properties["publish.game_versions"]
@@ -145,7 +145,11 @@ tasks {
             val jarFile = modJarRegularFile
             val targetDir = deployDir
             doLast {
-                val mods = file(targetDir.get())
+                val path = targetDir.orNull ?: throw GradleException(
+                    "Не задан deploy.dir — путь к папке модов клиента. Пропиши его в "
+                        + "~/.gradle/gradle.properties, например: deploy.dir=C:/Games/Fabric/mods"
+                )
+                val mods = file(path)
                 if (!mods.isDirectory) {
                     throw GradleException("Папка модов не найдена: $mods")
                 }
