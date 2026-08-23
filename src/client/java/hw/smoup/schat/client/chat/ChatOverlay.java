@@ -30,6 +30,8 @@ public final class ChatOverlay {
     private static final int HANDLE_THICKNESS = 2;
     private static final int CORNER_SIZE = 5;
     private static final int SCALE_SIZE = 7;
+    private static final int EDGE_TICK = 6;
+    private static final int EDGE_REVEAL = 24;
     private static final double SCALE_PER_PIXEL = 0.01;
 
     private static final int LINE_FOCUSED = 0xDDFFFFFF;
@@ -44,6 +46,22 @@ public final class ChatOverlay {
     private static final int MOVE_HOVER = 0xFFAFD4FF;
     private static final int MERGE_HIGHLIGHT = 0x66FFC94D;
     private static final int LABEL_COLOR = 0xFFFFFFFF;
+
+    private static final int LINE_FOCUSED_DIM = 0x66FFFFFF;
+    private static final int LINE_UNFOCUSED_DIM = 0x99FFC94D;
+    private static final int LINE_SHADOW_DIM = 0x55000000;
+    private static final int HANDLE_IDLE_DIM = 0x66FFFFFF;
+    private static final int SCALE_IDLE_DIM = 0x778CD97F;
+    private static final int MOVE_IDLE_DIM = 0x778FB8E3;
+
+    private record Palette(int line, int shadow, int edge, int handleIdle, int scaleIdle,
+                           int moveIdle) {
+    }
+
+    private static final Palette HOT = new Palette(LINE_FOCUSED, LINE_SHADOW, LINE_UNFOCUSED,
+            HANDLE_IDLE, SCALE_IDLE, MOVE_IDLE);
+    private static final Palette DIM = new Palette(LINE_FOCUSED_DIM, LINE_SHADOW_DIM,
+            LINE_UNFOCUSED_DIM, HANDLE_IDLE_DIM, SCALE_IDLE_DIM, MOVE_IDLE_DIM);
 
     private static Target dragging;
     private static boolean leftDown;
@@ -112,8 +130,9 @@ public final class ChatOverlay {
             if (panel == mergeTarget) {
                 highlight(rects, panel);
             }
-            drawUnfocusedEdge(rects, panel, active);
-            drawFrame(rects, panel, active);
+            Palette palette = palette(panel, active, mouseX, mouseY);
+            drawUnfocusedEdge(rects, panel, active, palette, mouseX, mouseY);
+            drawFrame(rects, panel, active, palette);
         }
         if (active != null) {
             drawLabel(texts, active, mouseX, mouseY);
@@ -300,20 +319,21 @@ public final class ChatOverlay {
         sink.fill(frame.left(), frame.top(), frame.right(), frame.bottom(), MERGE_HIGHLIGHT);
     }
 
-    private static void drawFrame(RectSink sink, ChatPanel panel, Target active) {
+    private static void drawFrame(RectSink sink, ChatPanel panel, Target active, Palette palette) {
         ChatFrame frame = ChatFrame.of(panel, true);
+        int shadow = palette.shadow();
+        int line = palette.line();
         // Тёмная подложка под каждой линией: на светлом небе белая рамка иначе исчезает.
-        sink.fill(frame.left() - 1, frame.top() - 1, frame.right() + 1, frame.top(), LINE_SHADOW);
-        sink.fill(frame.right() + 1, frame.top(), frame.right() + 2, frame.bottom() + 2,
-                LINE_SHADOW);
+        sink.fill(frame.left() - 1, frame.top() - 1, frame.right() + 1, frame.top(), shadow);
+        sink.fill(frame.right() + 1, frame.top(), frame.right() + 2, frame.bottom() + 2, shadow);
         sink.fill(frame.left() - 1, frame.bottom() + 1, frame.right() + 1, frame.bottom() + 2,
-                LINE_SHADOW);
-        sink.fill(frame.left() - 1, frame.top(), frame.left(), frame.bottom() + 1, LINE_SHADOW);
+                shadow);
+        sink.fill(frame.left() - 1, frame.top(), frame.left(), frame.bottom() + 1, shadow);
 
-        sink.fill(frame.left(), frame.top(), frame.right(), frame.top() + 1, LINE_FOCUSED);
-        sink.fill(frame.right(), frame.top(), frame.right() + 1, frame.bottom() + 1, LINE_FOCUSED);
-        sink.fill(frame.left(), frame.bottom(), frame.right(), frame.bottom() + 1, LINE_FOCUSED);
-        sink.fill(frame.left(), frame.top(), frame.left() + 1, frame.bottom(), LINE_FOCUSED);
+        sink.fill(frame.left(), frame.top(), frame.right(), frame.top() + 1, line);
+        sink.fill(frame.right(), frame.top(), frame.right() + 1, frame.bottom() + 1, line);
+        sink.fill(frame.left(), frame.bottom(), frame.right(), frame.bottom() + 1, line);
+        sink.fill(frame.left(), frame.top(), frame.left() + 1, frame.bottom(), line);
 
         Handle handle = active != null && active.panel() == panel && active.focused()
                 ? active.handle()
@@ -333,14 +353,24 @@ public final class ChatOverlay {
                     frame.right() + 1, frame.top() + 1, color);
         } else if (handle == null) {
             sink.fill(frame.right() - CORNER_SIZE + 2, frame.top() - 1,
-                    frame.right() + 1, frame.top() + 1, HANDLE_IDLE);
+                    frame.right() + 1, frame.top() + 1, palette.handleIdle());
         }
 
-        drawScaleHandle(sink, frame, handle == Handle.SCALE);
-        drawMoveHandle(sink, frame, handle == Handle.MOVE);
+        drawScaleHandle(sink, frame, handle == Handle.SCALE, palette);
+        drawMoveHandle(sink, frame, handle == Handle.MOVE, palette);
     }
 
-    private static void drawUnfocusedEdge(RectSink sink, ChatPanel panel, Target active) {
+    private static Palette palette(ChatPanel panel, Target active, int mouseX, int mouseY) {
+        if (active != null) {
+            return active.panel() == panel ? HOT : DIM;
+        }
+        return ChatFrame.of(panel, true).contains(mouseX, mouseY, GRAB) ? HOT : DIM;
+    }
+
+    // Линия проходит по строкам сообщений, поэтому пунктир во всю ширину показываем
+    // только когда курсор подошёл к ней. В покое остаются засечки у краёв панели.
+    private static void drawUnfocusedEdge(RectSink sink, ChatPanel panel, Target active,
+                                          Palette palette, int mouseX, int mouseY) {
         ChatFrame frame = ChatFrame.of(panel, false);
         boolean isActive = active != null && active.panel() == panel && !active.focused();
         if (isActive) {
@@ -349,19 +379,40 @@ public final class ChatOverlay {
                     frame.right(), frame.top() + HANDLE_THICKNESS, color);
             return;
         }
-        dashedHorizontal(sink, frame.left(), frame.right(), frame.top(), LINE_UNFOCUSED);
+        if (dragging == null && edgeRevealed(frame, mouseX, mouseY)) {
+            dashedHorizontal(sink, frame.left(), frame.right(), frame.top(), palette);
+            return;
+        }
+        int tick = Math.min(EDGE_TICK, Math.max(0, (frame.right() - frame.left()) / 2));
+        edgeTick(sink, frame.left(), frame.left() + tick, frame.top(), palette);
+        edgeTick(sink, frame.right() - tick, frame.right(), frame.top(), palette);
     }
 
-    private static void drawScaleHandle(RectSink sink, ChatFrame frame, boolean active) {
-        int color = active ? (dragging != null ? HANDLE_DRAG : SCALE_HOVER) : SCALE_IDLE;
+    private static boolean edgeRevealed(ChatFrame frame, int mouseX, int mouseY) {
+        return mouseX >= frame.left() - GRAB && mouseX <= frame.right() + GRAB
+                && Math.abs(mouseY - frame.top()) <= EDGE_REVEAL;
+    }
+
+    private static void edgeTick(RectSink sink, int from, int to, int y, Palette palette) {
+        if (to <= from) {
+            return;
+        }
+        sink.fill(from, y - 1, to, y + 2, palette.shadow());
+        sink.fill(from, y, to, y + 1, palette.edge());
+    }
+
+    private static void drawScaleHandle(RectSink sink, ChatFrame frame, boolean active,
+                                        Palette palette) {
+        int color = active ? (dragging != null ? HANDLE_DRAG : SCALE_HOVER) : palette.scaleIdle();
         int size = active ? SCALE_SIZE + 2 : SCALE_SIZE;
         int thickness = active ? 3 : 2;
         sink.fill(frame.left(), frame.top(), frame.left() + size, frame.top() + thickness, color);
         sink.fill(frame.left(), frame.top(), frame.left() + thickness, frame.top() + size, color);
     }
 
-    private static void drawMoveHandle(RectSink sink, ChatFrame frame, boolean active) {
-        int color = active ? (dragging != null ? HANDLE_DRAG : MOVE_HOVER) : MOVE_IDLE;
+    private static void drawMoveHandle(RectSink sink, ChatFrame frame, boolean active,
+                                       Palette palette) {
+        int color = active ? (dragging != null ? HANDLE_DRAG : MOVE_HOVER) : palette.moveIdle();
         if (active) {
             sink.fill(frame.left(), frame.bottom() - HANDLE_THICKNESS + 1,
                     frame.right(), frame.bottom() + HANDLE_THICKNESS, color);
@@ -403,10 +454,10 @@ public final class ChatOverlay {
         return Translations.get("schat.chat.both");
     }
 
-    private static void dashedHorizontal(RectSink sink, int from, int to, int y, int color) {
-        sink.fill(from, y - 1, to, y + 2, LINE_SHADOW);
+    private static void dashedHorizontal(RectSink sink, int from, int to, int y, Palette palette) {
+        sink.fill(from, y - 1, to, y + 2, palette.shadow());
         for (int x = from; x < to; x += 4) {
-            sink.fill(x, y, Math.min(x + 2, to), y + 1, color);
+            sink.fill(x, y, Math.min(x + 2, to), y + 1, palette.edge());
         }
     }
 

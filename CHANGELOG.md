@@ -1,3 +1,11 @@
+## 1.0.5
+
+- Fixed: the dashed "closed chat" edge no longer covers a line of messages — only short
+  ticks at both ends of the panel are left, and the full dashed line returns as soon as the
+  cursor comes near it, so the border is still easy to grab
+- Frames and handles are dimmed while idle; the panel under the cursor keeps the previous
+  brightness, so it is clear which one you are about to resize
+
 ## 1.0.4
 
 - Fixed: switching between servers no longer drops you with a network protocol error — the
