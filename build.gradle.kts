@@ -97,6 +97,10 @@ publishMods {
 
     modrinth {
         projectId = modrinthId
+        // Мод чисто клиентский, серверной части нет. Без явного environment Modrinth
+        // ставит версии unknown (fabric.mod.json он при загрузке не смотрит), а за это
+        // модерация придерживает проект.
+        environment = CLIENT_ONLY
         accessToken = providers.gradleProperty("MODRINTH_TOKEN")
             .orElse(providers.environmentVariable("MODRINTH_TOKEN"))
         minecraftVersions.addAll(publishGameVersions)

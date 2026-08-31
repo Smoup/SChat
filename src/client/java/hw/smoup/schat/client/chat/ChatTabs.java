@@ -16,20 +16,62 @@ import net.minecraft.network.chat.MessageSignature;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 public final class ChatTabs {
 
-    private record Entry(Component message, MessageSignature signature, Object source,
-                         GuiMessageTag tag, String normalized) {
+    private static final class Entry {
+
+        private final Component message;
+        private final MessageSignature signature;
+        private final Object source;
+        private final GuiMessageTag tag;
+        private final String normalized;
+
+        private long cachedStamp;
+        private long cachedMask;
+
+        private Entry(Component message, MessageSignature signature, Object source,
+                      GuiMessageTag tag, String normalized) {
+            this.message = message;
+            this.signature = signature;
+            this.source = source;
+            this.tag = tag;
+            this.normalized = normalized;
+        }
+
+        private Component message() {
+            return message;
+        }
+
+        private MessageSignature signature() {
+            return signature;
+        }
+
+        private Object source() {
+            return source;
+        }
+
+        private GuiMessageTag tag() {
+            return tag;
+        }
+
+        private String normalized() {
+            return normalized;
+        }
     }
+
+    private static final int TRIM_SLACK = 32;
 
     private static final Deque<Entry> history = new ArrayDeque<>();
 
     private static List<Entry> snapshot;
     private static List<ChatTab> claimingTabs;
+    private static List<ChatTab> allTabs = List.of();
+    private static long visibilityStamp;
     private static boolean rebuilding;
     private static boolean inWorld;
     private static String lastServerAddress;
@@ -44,30 +86,29 @@ public final class ChatTabs {
     public static void onMessage(Component message, MessageSignature signature, Object source,
                                  GuiMessageTag tag) {
         SchatConfig config = SchatConfig.get();
-        String text = plainLowerCase(message);
-        Entry entry = new Entry(message, signature, source, tag, text);
+        refreshVisibility(config);
+        Entry entry = new Entry(message, signature, source, tag, plainLowerCase(message));
         history.addLast(entry);
-        trimHistory(config);
+        trimHistory();
 
         boolean visible = false;
         for (ChatPanel panel : config.panels()) {
-            if (panel.empty() || !visibleIn(panel.activeTab(), text)) {
+            if (panel.empty() || !visibleTo(entry, panel.activeTab())) {
                 continue;
             }
             visible = true;
             show(panel, entry);
         }
         if (!visible) {
-            countAsUnread(config, text);
+            countAsUnread(entry);
         }
     }
 
-    private static void countAsUnread(SchatConfig config, String text) {
-        for (ChatPanel panel : config.panels()) {
-            for (ChatTab tab : panel.tabs()) {
-                if (visibleIn(tab, text)) {
-                    tab.addUnread();
-                }
+    private static void countAsUnread(Entry entry) {
+        for (int index = 0; index < allTabs.size(); index++) {
+            ChatTab tab = allTabs.get(index);
+            if (visibleAt(entry, tab, index)) {
+                tab.addUnread();
             }
         }
     }
@@ -178,13 +219,15 @@ public final class ChatTabs {
         if (chat == null || panel.empty()) {
             return;
         }
+        refreshVisibility(SchatConfig.get());
         ChatTab tab = panel.activeTab();
+        int bit = allTabs.indexOf(tab);
         ChatComponentAccessor accessor = (ChatComponentAccessor) chat;
         accessor.schat$trimmedMessages().clear();
         accessor.schat$allMessages().clear();
         panel.setLastShown(null, 0);
         for (Entry entry : history) {
-            if (visibleIn(tab, entry.normalized())) {
+            if (visibleAt(entry, tab, bit)) {
                 show(panel, entry);
             }
         }
@@ -345,6 +388,7 @@ public final class ChatTabs {
 
     public static void invalidateClaims() {
         claimingTabs = null;
+        visibilityStamp = 0;
     }
 
     private static String plainLowerCase(Component message) {
@@ -352,14 +396,100 @@ public final class ChatTabs {
         return stripped == null ? "" : stripped.toLowerCase(Locale.ROOT);
     }
 
-    private static void trimHistory(SchatConfig config) {
-        int limit = ChatTab.DEFAULT_HISTORY;
+    // Буфер один на все панели, поэтому резать его с головы по общему лимиту нельзя:
+    // поток из глобалки вытеснял бы редкие сообщения чужих вкладок. При уборке каждая
+    // вкладка набирает с конца свои historyLimit записей, а что не набрала ни одна —
+    // выбрасывается. Отсюда и потолок буфера: сумма лимитов всех вкладок.
+    private static void trimHistory() {
+        int capacity = historyCapacity();
+        if (history.size() <= capacity + Math.max(TRIM_SLACK, capacity / 8)) {
+            return;
+        }
+        int[] taken = new int[allTabs.size()];
+        List<Entry> kept = new ArrayList<>();
+        Iterator<Entry> newestFirst = history.descendingIterator();
+        while (newestFirst.hasNext()) {
+            Entry entry = newestFirst.next();
+            boolean wanted = false;
+            for (int index = 0; index < allTabs.size(); index++) {
+                ChatTab tab = allTabs.get(index);
+                if (taken[index] >= tab.historyLimit() || !visibleAt(entry, tab, index)) {
+                    continue;
+                }
+                taken[index]++;
+                wanted = true;
+            }
+            if (wanted) {
+                kept.add(entry);
+            }
+        }
+        history.clear();
+        for (int index = kept.size() - 1; index >= 0; index--) {
+            history.addLast(kept.get(index));
+        }
+    }
+
+    private static int historyCapacity() {
+        int capacity = 0;
+        for (ChatTab tab : allTabs) {
+            capacity += tab.historyLimit();
+        }
+        return Math.max(ChatTab.MIN_HISTORY, capacity);
+    }
+
+    // Состав вкладок и их фильтры меняются прямо по ходу игры, а кэш видимости в записях
+    // привязан к порядку вкладок в этом списке, поэтому обе части пересобираются вместе.
+    private static void refreshVisibility(SchatConfig config) {
+        long stamp = currentStamp(config);
+        if (stamp == visibilityStamp) {
+            return;
+        }
+        visibilityStamp = stamp;
+        claimingTabs = null;
+        List<ChatTab> tabs = new ArrayList<>();
         for (ChatPanel panel : config.panels()) {
-            limit = Math.max(limit, panel.historyLimit());
+            tabs.addAll(panel.tabs());
         }
-        while (history.size() > limit) {
-            history.removeFirst();
+        allTabs = tabs;
+    }
+
+    private static long currentStamp(SchatConfig config) {
+        String address = currentServerAddress();
+        long stamp = address == null ? 1 : address.hashCode();
+        for (ChatPanel panel : config.panels()) {
+            for (ChatTab tab : panel.tabs()) {
+                stamp = stamp * 31 + System.identityHashCode(tab);
+                stamp = stamp * 31 + tab.visibilityRevision();
+            }
         }
+        return stamp == 0 ? 1 : stamp;
+    }
+
+    private static boolean visibleTo(Entry entry, ChatTab tab) {
+        return visibleAt(entry, tab, allTabs.indexOf(tab));
+    }
+
+    private static boolean visibleAt(Entry entry, ChatTab tab, int bit) {
+        if (bit < 0 || bit >= Long.SIZE || visibilityStamp == 0) {
+            return visibleIn(tab, entry.normalized());
+        }
+        return (visibilityMask(entry) & (1L << bit)) != 0;
+    }
+
+    private static long visibilityMask(Entry entry) {
+        if (entry.cachedStamp == visibilityStamp) {
+            return entry.cachedMask;
+        }
+        long mask = 0L;
+        int count = Math.min(allTabs.size(), Long.SIZE);
+        for (int index = 0; index < count; index++) {
+            if (visibleIn(allTabs.get(index), entry.normalized())) {
+                mask |= 1L << index;
+            }
+        }
+        entry.cachedStamp = visibilityStamp;
+        entry.cachedMask = mask;
+        return mask;
     }
 
     public static ChatPanel panelOf(Object component) {

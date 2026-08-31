@@ -9,7 +9,7 @@ pluginManagement {
     // Версия централизована здесь; в build.gradle.kts плагин применяется без версии
     // (тот же приём, что и для loom-back-compat).
     plugins {
-        id("me.modmuss50.mod-publish-plugin") version "2.0.1"
+        id("me.modmuss50.mod-publish-plugin") version "2.2.0"
     }
 }
 

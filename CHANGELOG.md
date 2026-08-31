@@ -1,3 +1,12 @@
+## 1.0.6
+
+- Fixed: messages no longer vanish from quiet tabs. The history was one buffer trimmed by a
+  single limit shared by every tab, so a busy tab pushed out whatever the quiet ones had
+  collected, and the loss showed up the moment you switched to them. Every tab now keeps its
+  own history limit, and the buffer is as deep as the tabs are set to
+- Switching tabs stays fast on a large history: whether a message belongs to a tab is
+  remembered per message and recomputed only when tabs or their filters change
+
 ## 1.0.5
 
 - Fixed: the dashed "closed chat" edge no longer covers a line of messages — only short

@@ -83,6 +83,13 @@ public final class MessageFilter {
         return text.isEmpty();
     }
 
+    long revision() {
+        long revision = mode == null ? 0 : mode.ordinal() + 1;
+        revision = revision * 31 + text.hashCode();
+        revision = revision * 31 + (negate ? 1 : 0);
+        return revision * 31 + (strip ? 1 : 0);
+    }
+
     public boolean matches(String plainLowerCase) {
         boolean hit = switch (mode) {
             case CONTAINS -> plainLowerCase.contains(lowered);

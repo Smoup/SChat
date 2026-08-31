@@ -278,14 +278,6 @@ public final class ChatPanel {
         return tabs.isEmpty();
     }
 
-    public int historyLimit() {
-        int limit = ChatTab.MIN_HISTORY;
-        for (ChatTab tab : tabs) {
-            limit = Math.max(limit, tab.historyLimit());
-        }
-        return limit;
-    }
-
     void sanitize(String defaultTabName) {
         if (tabs == null) {
             tabs = new ArrayList<>();

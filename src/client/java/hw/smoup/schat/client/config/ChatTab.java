@@ -304,6 +304,19 @@ public final class ChatTab {
         unread = 0;
     }
 
+    // Экран настроек правит фильтры мутацией объектов, без единой точки вызова, поэтому
+    // кэш видимости сообщений сбрасывается не флагом, а несовпадением этой ревизии.
+    public long visibilityRevision() {
+        long revision = exclusive ? 1 : 2;
+        revision = revision * 31 + (matchAllFilters ? 1 : 0);
+        revision = revision * 31 + servers.hashCode();
+        revision = revision * 31 + filters.size();
+        for (MessageFilter filter : filters) {
+            revision = revision * 31 + filter.revision();
+        }
+        return revision;
+    }
+
     public boolean accepts(String plainLowerCase) {
         return breaksNoBan(plainLowerCase) && matchesConditions(plainLowerCase);
     }
