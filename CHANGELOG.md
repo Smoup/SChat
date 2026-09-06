@@ -1,3 +1,9 @@
+## 1.0.7
+
+- The tab strip now sits below the chat by default — the chat itself is where the eye
+  already is, and the strip no longer pushes it down. The position is still per chat and
+  goes back above in the tab settings; chats you have already set up keep theirs
+
 ## 1.0.6
 
 - Fixed: messages no longer vanish from quiet tabs. The history was one buffer trimmed by a
@@ -85,6 +91,12 @@ First release.
 - English and Russian, no Fabric API required
 
 ---
+
+## 1.0.7 (русский)
+
+- Полоса вкладок теперь по умолчанию под чатом — глаз и так внизу, у строки ввода, а
+  полоса больше не отжимает чат вниз. Положение по-прежнему своё у каждого чата и
+  возвращается наверх в настройках вкладки; уже настроенные чаты остаются как были
 
 ## 1.0.6 (русский)
 

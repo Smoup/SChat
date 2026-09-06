@@ -39,7 +39,7 @@ public final class ChatPanel {
 
     private List<ChatTab> tabs = new ArrayList<>();
     private int activeTab;
-    private boolean tabsBelow;
+    private boolean tabsBelow = true;
 
     private final transient ScreenFit fit = new ScreenFit();
     private final transient RepeatState repeat = new RepeatState();

@@ -30,7 +30,7 @@ Everything you drag is saved and synced with the vanilla chat settings.
 
 ### Tabs
 
-A strip of tabs sits above the chat — or below it, that is per chat. Each tab is a
+A strip of tabs sits below the chat — or above it, that is per chat. Each tab is a
 filtered view of the same message stream, with its own name, look and history.
 
 - Unread messages show up as a count in a red outline. A message that is visible on
@@ -62,8 +62,8 @@ The button in the top-right corner of every chat opens the settings of the activ
 - **Nickname button** — appends a copy button right after a player nickname found in the
   message. Off by default: AdminTool draws the same button, and a second one is never
   inserted
-- **Copy button** — copies the whole message. The repeat counter never reaches the
-  clipboard
+- **Copy button** — copies the whole message. Off by default. The repeat counter never
+  reaches the clipboard
 - **Only here** — messages this tab matches disappear from every other tab, including
   the catch-all one
 - **Servers** — limit the tab to a list of addresses, wildcards included:
@@ -73,8 +73,8 @@ The button in the top-right corner of every chat opens the settings of the activ
 - **Unread counter** — show or hide the count for this tab. A hidden counter never
   raises the strip while the chat is closed
 - **Tab colours** — plate colour, name colour and plate opacity, each tab on its own
-- **Strip position** — above or below the chat. This one belongs to the whole chat
-  rather than to a single tab
+- **Strip position** — below the chat by default, can be moved above it. This one belongs
+  to the whole chat rather than to a single tab
 - **Filters** — six conditions in one button: contains, does not contain, starts with,
   does not start with, ends with, does not end with. Case and colour codes are ignored.
   **Any** or **All** decides how several conditions add up, and **Cut** drops the matched
@@ -150,7 +150,7 @@ money from them, so it stays free regardless of this license.
 
 ### Вкладки
 
-Над чатом появляется полоса вкладок — или под ним, это настраивается у каждого чата.
+Под чатом появляется полоса вкладок — или над ним, это настраивается у каждого чата.
 Каждая вкладка — это отфильтрованный вид одного и того же потока сообщений, со своим
 именем, оформлением и историей.
 
@@ -182,8 +182,8 @@ money from them, so it stays free regardless of this license.
 - **Кнопка ника** — дописывает кнопку копирования сразу за ником игрока, найденным в
   сообщении. По умолчанию выключена: такую же кнопку рисует AdminTool, и второй мод
   никогда не вставит
-- **Кнопка копирования** — копирует сообщение целиком. Счётчик повторов в буфер не
-  попадает
+- **Кнопка копирования** — копирует сообщение целиком. По умолчанию выключена. Счётчик
+  повторов в буфер не попадает
 - **Только здесь** — сообщения, подошедшие этой вкладке, исчезают из всех остальных, в
   том числе из общей
 - **Серверы** — список адресов, где вкладка живёт, в том числе с масками:
@@ -194,8 +194,8 @@ money from them, so it stays free regardless of this license.
   не поднимает полосу вкладок при закрытом чате
 - **Цвета вкладки** — цвет плашки, цвет названия и прозрачность плашки, у каждой вкладки
   свои
-- **Полоса вкладок** — над чатом или под ним. Эта настройка общая для всего чата, а не
-  для одной вкладки
+- **Полоса вкладок** — по умолчанию под чатом, можно поднять над ним. Эта настройка общая
+  для всего чата, а не для одной вкладки
 - **Фильтры** — шесть условий в одной кнопке: содержит, не содержит, начинается с, не
   начинается с, заканчивается на, не заканчивается на. Регистр и цветовые коды не
   учитываются. **Любое** или **Все** решает, как складываются несколько условий, а

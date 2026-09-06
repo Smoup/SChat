@@ -37,7 +37,7 @@ current value as your new default.
 
 ### 🗂️ Tabs
 
-A tab strip sits above the chat — or below it, that is per chat. Every tab is a filtered
+A tab strip sits below the chat — or above it, that is per chat. Every tab is a filtered
 view of the same message stream.
 
 - 🔴 Unread messages appear as a count in a red outline
@@ -73,7 +73,8 @@ The button in the top-right corner of every chat opens the active tab's settings
 - 🔢 **Unread counter** — show or hide the count per tab. A hidden one never raises the
   strip while the chat is closed
 - 🎨 **Tab colours** — plate colour, name colour and plate opacity, each tab on its own
-- 📍 **Strip position** — above or below the chat, for the whole chat rather than one tab
+- 📍 **Strip position** — below the chat by default, can be moved above it, for the whole
+  chat rather than one tab
 - 🔍 **Filters** — six conditions in one button: contains · does not contain · starts
   with · does not start with · ends with · does not end with. **Any** or **All** decides
   how several of them add up, and ✂️ **Cut** drops the matched part from the displayed
@@ -145,7 +146,7 @@ money from them.
 
 ### 🗂️ Вкладки
 
-Над чатом появляется полоса вкладок — или под ним, это настраивается у каждого чата.
+Под чатом появляется полоса вкладок — или над ним, это настраивается у каждого чата.
 Каждая вкладка — отфильтрованный вид одного потока сообщений.
 
 - 🔴 Непрочитанные показываются числом в красной рамке
@@ -181,7 +182,8 @@ money from them.
 - 🔢 **Счётчик** — показывать или скрыть число непрочитанных у вкладки. Скрытый не
   поднимает полосу при закрытом чате
 - 🎨 **Цвета вкладки** — цвет плашки, цвет названия и прозрачность плашки, у каждой свои
-- 📍 **Полоса вкладок** — над чатом или под ним, настройка всего чата, а не одной вкладки
+- 📍 **Полоса вкладок** — по умолчанию под чатом, можно поднять над ним; настройка всего
+  чата, а не одной вкладки
 - 🔍 **Фильтры** — шесть условий в одной кнопке: содержит · не содержит · начинается с ·
   не начинается с · заканчивается на · не заканчивается на. **Любое** или **Все** решает,
   как складываются несколько условий, а ✂️ **Вырезать** убирает совпавшую часть из
